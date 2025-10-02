@@ -1,3 +1,7 @@
+Date: October 1, 2025 at 6:30PM
+Participants: Samantha A., Gerves B., Qiao H., Manish S., Rachan S.
+Topic: Finalizing Part B of the project and beginning development of the app's log-in feature. The project's burndown chart is also being updated and consolidated.
+
 Date:September 24, 2025 at 6:30PM
 Participannts: Samantha Aguirre, Manish Ranjan Shrivastav, Gerves Francois Baniakina
 Focused on clarifying Milestone One requirements and logistics.
