@@ -1,6 +1,7 @@
 Date: October 1, 2025 at 6:30PM
 Participants: Samantha A., Gerves B., Qiao H., Manish S., Rachan S.
 Topic: Finalizing Part B of the project and beginning development of the app's log-in feature. The project's burndown chart is also being updated and consolidated.
+https://cgu0-my.sharepoint.com/:w:/g/personal/samantha_aguirre_cgu_edu/EXA-6QFoh3BLvEFpddSW5XwBFshm1WCBbWBdSq8VvvE4rg?e=hvxJUL
 
 Date:September 24, 2025 at 6:30PM
 Participannts: Samantha Aguirre, Manish Ranjan Shrivastav, Gerves Francois Baniakina
