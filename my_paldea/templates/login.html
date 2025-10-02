@@ -1,0 +1,69 @@
+{% extends 'home.html' %}
+
+{% block container %}
+<h2>Login</h2>
+<div class="container mt-5">
+    <div class="top-pad">
+        <ul class="nav nav-tabs mb-3" id="loginTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="simple-form-tab" data-bs-toggle="tab" data-bs-target="#simple-form" type="button" role="tab" aria-controls="simple-form" aria-selected="true">
+                    Old Style Login
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="social-logins-tab" data-bs-toggle="tab" data-bs-target="#social-logins" type="button" role="tab" aria-controls="social-logins" aria-selected="false">
+                    Social Logins
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="ldap-form-tab" data-bs-toggle="tab" data-bs-target="#ldap-form" type="button" role="tab" aria-controls="ldap-form" aria-selected="false">
+                    LDAP Login
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="loginTabsContent">
+            <!-- Simple Login Form -->
+            <div class="tab-pane fade show active" id="simple-form" role="tabpanel" aria-labelledby="simple-form-tab">
+                <form method="POST" action="{{ url_for('paldea_app.login') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control", placeholder="Enter your username") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control", placeholder="Enter your password") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+            </div>
+
+            <!-- Social Logins -->
+            <div class="tab-pane fade" id="social-logins" role="tabpanel" aria-labelledby="social-logins-tab">
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{{ url_for('paldea_app.facebook_login', next=url_for('paldea_app.home')) }}" class="btn btn-primary">Login via Facebook</a>
+                    <a href="{{ url_for('paldea_app.google_login', next=url_for('paldea_app.home')) }}" class="btn btn-danger">Login via Google</a>
+                    <a href="{{ url_for('paldea_app.twitter_login', next=url_for('paldea_app.home')) }}" class="btn btn-info text-white">Login via Twitter</a>
+                </div>
+            </div>
+
+            <!-- LDAP Login Form -->
+            <div class="tab-pane fade" id="ldap-form" role="tabpanel" aria-labelledby="ldap-form-tab">
+                <form method="POST" action="{{ url_for('paldea_app.ldap_login') }}" class="mt-3">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control", placeholder="Enter LDAP username") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control", placeholder="Enter LDAP password") }}
+                    </div>
+                    <button type="submit" class="btn btn-secondary w-100">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block container %}
+<div class="text-center mt-5">
+    <h1 class="mb-4">Welcome to Paldea App</h1>
+    <h2 class="mb-4">Authentication Phase</h2>
+
+    {% if session.username %}
+        <h3 class="mb-3">Hey {{ session.username }}!</h3>
+        <a class="btn btn-danger mb-3" href="{{ url_for('paldea_app.logout') }}">Logout</a>
+    {% else %}
+        <a class="btn btn-primary mb-3" href="{{ url_for('paldea_app.login_standard') }}">Login</a>
+        <a class="btn btn-success mb-3" href="{{ url_for('paldea_app.register') }}">Register</a>
+    {% endif %}
+
+    {% if current_user.is_authenticated %}
+        <div class="alert alert-info mt-4">
+            You are fully authenticated! You can now access protected features.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
