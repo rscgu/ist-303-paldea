@@ -1,3 +1,8 @@
+Date:September 24, 2025 at 6:30PM
+Participannts: Samantha Aguirre, Manish Ranjan Shrivastav, Gerves Francois Baniakina
+Focused on clarifying Milestone One requirements and logistics.
+
+
 Personal Finance Tracker 
 Team members: Samantha Aguirre, Gerves Francois Baniakina, Qiao Huang, Rachan Sailamai, Manish
 Shrivastav
