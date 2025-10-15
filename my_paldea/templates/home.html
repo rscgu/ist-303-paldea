@@ -1,20 +1,85 @@
 {% extends 'base.html' %}
 {% block container %}
-<div class="text-center mt-5">
-    <h1 class="mb-4">Welcome to Paldea App</h1>
-    <h2 class="mb-4">Authentication Phase</h2>
-
-    {% if session.username %}
-        <h3 class="mb-3">Hey {{ session.username }}!</h3>
-        <a class="btn btn-danger mb-3" href="{{ url_for('paldea_app.logout') }}">Logout</a>
-    {% else %}
-        <a class="btn btn-primary mb-3" href="{{ url_for('paldea_app.login_standard') }}">Login</a>
-        <a class="btn btn-success mb-3" href="{{ url_for('paldea_app.register') }}">Register</a>
-    {% endif %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="mb-4">Welcome to Paldea App</h1>
+        <h2 class="mb-4">Personal Financial Budget Planning</h2>
+    </div>
 
     {% if current_user.is_authenticated %}
-        <div class="alert alert-info mt-4">
-            You are fully authenticated! You can now access protected features.
+        <h3 class="mb-3 text-center">Hey {{ current_user.username }}!</h3>
+
+        <!-- Budget Alert -->
+        {% if current_user.is_budget_exceeded() %}
+            <div class="alert alert-danger text-center" role="alert">
+                <strong>Warning!</strong> You have exceeded your budget! Total expenses: ${{ "%.2f"|format(current_user.get_total_expenses()) }} / Budget: ${{ "%.2f"|format(current_user.budget) }}
+            </div>
+        {% endif %}
+
+        <!-- Budget and Expense Forms -->
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Set Monthly Budget</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('paldea_app.set_budget') }}">
+                            {{ budget_form.csrf_token }}
+                            <div class="mb-3">
+                                {{ budget_form.budget.label(class="form-label") }}
+                                {{ budget_form.budget(class="form-control", placeholder="Enter monthly budget") }}
+                            </div>
+                            {{ budget_form.submit(class="btn btn-primary w-100") }}
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Add Expense</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('paldea_app.add_expense') }}">
+                            {{ expense_form.csrf_token }}
+                            <div class="mb-3">
+                                {{ expense_form.description.label(class="form-label") }}
+                                {{ expense_form.description(class="form-control", placeholder="Expense description") }}
+                            </div>
+                            <div class="mb-3">
+                                {{ expense_form.amount.label(class="form-label") }}
+                                {{ expense_form.amount(class="form-control", placeholder="Amount") }}
+                            </div>
+                            {{ expense_form.submit(class="btn btn-success w-100") }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Summary -->
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Budget Summary</h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Monthly Budget:</strong> ${{ "%.2f"|format(current_user.budget) if current_user.budget else "Not set" }}</p>
+                        <p><strong>Total Expenses:</strong> ${{ "%.2f"|format(current_user.get_total_expenses()) }}</p>
+                        <p><strong>Remaining Budget:</strong> ${{ "%.2f"|format(current_user.budget - current_user.get_total_expenses()) if current_user.budget else "N/A" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a class="btn btn-danger" href="{{ url_for('paldea_app.logout') }}">Logout</a>
+        </div>
+    {% else %}
+        <div class="text-center">
+            <a class="btn btn-primary mb-3" href="{{ url_for('paldea_app.login') }}">Login</a>
+            <a class="btn btn-success mb-3" href="{{ url_for('paldea_app.register') }}">Register</a>
         </div>
     {% endif %}
 </div>

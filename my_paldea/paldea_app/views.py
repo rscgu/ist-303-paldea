@@ -6,8 +6,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from my_paldea import db,login_manager,bcrypt
 from my_paldea.utlities import get_ldap_connection
 from authlib.integrations.flask_client import OAuth
-from my_paldea.paldea_app.models import User, RegistrationForm,LoginForm
-from my_paldea.paldea_app.models import RegistrationForm, LoginForm
+from my_paldea.paldea_app.models import User, RegistrationForm,LoginForm, BudgetForm, ExpenseForm, Expense
 #from models import User, RegistrationForm,LoginForm
 #from flask_dance.facebook import make_facebook_blueprint, facebook
 #from flask_dance.facebook import make_facebook_blueprint, facebook
@@ -105,8 +104,11 @@ def profile():
 
 @paldea_app.route('/')
 @paldea_app.route('/home')
+@login_required
 def home():
-    return render_template('home.html')
+    budget_form = BudgetForm()
+    expense_form = ExpenseForm()
+    return render_template('home.html', budget_form=budget_form, expense_form=expense_form)
 
 @paldea_app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -151,36 +153,23 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():  # triggered on POST if validators pass
-        email = form.email.data
+        username = form.username.data
         password = form.password.data
 
         # --- Try local DB login first ---
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(username=username).first()
         if user:
-            if bcrypt.checkpw(password.encode(), user.password_hash):
+            if bcrypt.checkpw(password.encode(), user.pwdhash):
+                login_user(user)
                 session["user_id"] = user.id
-                flash("Logged in successfully (local)!", "success")
-                return redirect(url_for("paldea_app.dashboard"))
+                flash("Logged in successfully!", "success")
+                return redirect(url_for("paldea_app.home"))
             else:
-                flash("Invalid password for local account", "danger")
+                flash("Invalid password", "danger")
                 return render_template("login.html", form=form)
-
-        # --- If no local user, try LDAP ---
-        try:
-            ldap_server = Server("ldap://your-ldap-server.com", get_info=ALL)
-            ldap_conn = Connection(
-                ldap_server,
-                user=f"uid={email},ou=users,dc=example,dc=com",  # adjust DN to your LDAP
-                password=password
-            )
-            if ldap_conn.bind():  # successful LDAP login
-                session["user_email"] = email
-                flash("Logged in successfully (LDAP)!", "success")
-                return redirect(url_for("paldea_app.dashboard"))
-            else:
-                flash("Invalid LDAP credentials", "danger")
-        except Exception as e:
-            flash(f"LDAP error: {str(e)}", "danger")
+        else:
+            flash("User not found", "danger")
+            return render_template("login.html", form=form)
 
     # GET request or failed POST → show form
     return render_template("login.html", form=form)
@@ -261,6 +250,27 @@ def twitter_login():
     login_user(user)
     flash('Logged in as name=%s using Twitter login' %(resp.json()['name']),'success' )
     return redirect(request.args.get('next', url_for('paldea_app.home')))
+
+@paldea_app.route('/set_budget', methods=['POST'])
+@login_required
+def set_budget():
+    form = BudgetForm()
+    if form.validate_on_submit():
+        current_user.budget = form.budget.data
+        db.session.commit()
+        flash('Budget set successfully!', 'success')
+    return redirect(url_for('paldea_app.home'))
+
+@paldea_app.route('/add_expense', methods=['POST'])
+@login_required
+def add_expense():
+    form = ExpenseForm()
+    if form.validate_on_submit():
+        expense = Expense(description=form.description.data, amount=form.amount.data, user_id=current_user.id)
+        db.session.add(expense)
+        db.session.commit()
+        flash('Expense added successfully!', 'success')
+    return redirect(url_for('paldea_app.home'))
 
 @paldea_app.route('/ldap-login', endpoint='ldap_login', methods=['GET','POST'])
 def ldap_login():

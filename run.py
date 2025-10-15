@@ -5,4 +5,4 @@ app = create_app()
 # the reloader indicates the application is being run in debug mode
 # and that the application will reload whenever a change is made in the code
 if __name__=='__main__':
-   app.run(debug=True,ssl_context='adhoc')
+   app.run(debug=True)

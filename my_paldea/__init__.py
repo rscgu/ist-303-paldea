@@ -50,6 +50,13 @@ def create_app():
      # Create tables
     with app.app_context():
         db.create_all()
+        # Create admin user if not exists
+        from my_paldea.paldea_app.models import User
+        admin_user = User.query.filter_by(username='admin').first()
+        if not admin_user:
+            admin_user = User(username='admin', password='admin123', email='admin@example.com')
+            db.session.add(admin_user)
+            db.session.commit()
         #migrate = Migrate(app, db)
     return app
     

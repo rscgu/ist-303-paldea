@@ -2,20 +2,29 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import FlaskForm
 from flask_login import UserMixin
-from wtforms import StringField, PasswordField,SubmitField
+from wtforms import StringField, PasswordField,SubmitField, FloatField
 from wtforms.validators import InputRequired, EqualTo, Length, Email
 from my_paldea import db
+from datetime import datetime
 
 class User(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150),nullable=False, unique=True)
     email = db.Column(db.String(150), nullable=False, unique=True)
     pwdhash = db.Column(db.String(256), nullable=False)
+    budget = db.Column(db.Float, default=0.0)  # Monthly budget
+    expenses = db.relationship('Expense', backref='user', lazy=True)
 
     def __init__(self, username, password, email):
         self.username = username
         self.pwdhash = generate_password_hash(password)
         self.email = email
+
+    def get_total_expenses(self):
+        return sum(expense.amount for expense in self.expenses)
+
+    def is_budget_exceeded(self):
+        return self.get_total_expenses() > self.budget if self.budget > 0 else False
 
     def check_password(self, password):
         return check_password_hash(self.pwdhash,password)
@@ -32,7 +41,26 @@ class User(UserMixin,db.Model):
         return str(self.id)
     def __repr__(self):
         return '<User %d>' % self.id
-    
+
+class Expense(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(200), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    def __repr__(self):
+        return f'<Expense {self.description}: ${self.amount}>'
+
+class BudgetForm(FlaskForm):
+    budget = FloatField('Monthly Budget', validators=[InputRequired()])
+    submit = SubmitField('Set Budget')
+
+class ExpenseForm(FlaskForm):
+    description = StringField('Description', validators=[InputRequired(), Length(min=1, max=200)])
+    amount = FloatField('Amount', validators=[InputRequired()])
+    submit = SubmitField('Add Expense')
+
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired(), Length(min=3, max=50)])
     email = StringField('Email', validators=[InputRequired(), Email()])
