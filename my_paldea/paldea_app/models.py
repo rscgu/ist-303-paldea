@@ -42,6 +42,17 @@ class User(UserMixin,db.Model):
     def __repr__(self):
         return '<User %d>' % self.id
 
+class Transaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(200), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    type = db.Column(db.String(20), nullable=False)  # 'income' or 'expense'
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    def __repr__(self):
+        return f'<Transaction {self.description}: ${self.amount} ({self.type})>'
+
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(200), nullable=False)
@@ -60,6 +71,12 @@ class ExpenseForm(FlaskForm):
     description = StringField('Description', validators=[InputRequired(), Length(min=1, max=200)])
     amount = FloatField('Amount', validators=[InputRequired()])
     submit = SubmitField('Add Expense')
+
+class TransactionForm(FlaskForm):
+    description = StringField('Description', validators=[InputRequired(), Length(min=1, max=200)])
+    amount = FloatField('Amount', validators=[InputRequired()])
+    type = StringField('Type', validators=[InputRequired()])  # income or expense
+    submit = SubmitField('Add Transaction')
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired(), Length(min=3, max=50)])

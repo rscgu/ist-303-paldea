@@ -6,7 +6,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from my_paldea import db,login_manager,bcrypt
 from my_paldea.utlities import get_ldap_connection
 from authlib.integrations.flask_client import OAuth
-from my_paldea.paldea_app.models import User, RegistrationForm,LoginForm, BudgetForm, ExpenseForm, Expense
+from my_paldea.paldea_app.models import User, RegistrationForm,LoginForm, BudgetForm, ExpenseForm, Expense, Transaction, TransactionForm
 #from models import User, RegistrationForm,LoginForm
 #from flask_dance.facebook import make_facebook_blueprint, facebook
 #from flask_dance.facebook import make_facebook_blueprint, facebook
@@ -270,6 +270,17 @@ def add_expense():
         db.session.add(expense)
         db.session.commit()
         flash('Expense added successfully!', 'success')
+    return redirect(url_for('paldea_app.home'))
+
+@paldea_app.route('/add_transaction', methods=['POST'])
+@login_required
+def add_transaction():
+    form = TransactionForm()
+    if form.validate_on_submit():
+        transaction = Transaction(description=form.description.data, amount=form.amount.data, type=form.type.data, user_id=current_user.id)
+        db.session.add(transaction)
+        db.session.commit()
+        flash('Transaction added successfully!', 'success')
     return redirect(url_for('paldea_app.home'))
 
 @paldea_app.route('/ldap-login', endpoint='ldap_login', methods=['GET','POST'])
