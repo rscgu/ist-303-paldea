@@ -52,8 +52,21 @@ def create_app():
         db.create_all()
         # Create admin user if not exists
         from my_paldea.paldea_app.models import User
+        from werkzeug.security import generate_password_hash
         admin_user = User.query.filter_by(username='admin').first()
         if not admin_user:
+            admin_user = User(username='admin', password='admin123', email='admin@example.com')
+            db.session.add(admin_user)
+            db.session.commit()
+        # Update admin password if needed (for compatibility)
+        try:
+            if admin_user and not admin_user.check_password('admin123'):
+                admin_user.pwdhash = generate_password_hash('admin123')
+                db.session.commit()
+        except AttributeError:
+            # If scrypt is not available, recreate the user
+            db.session.delete(admin_user)
+            db.session.commit()
             admin_user = User(username='admin', password='admin123', email='admin@example.com')
             db.session.add(admin_user)
             db.session.commit()

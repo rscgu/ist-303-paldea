@@ -41,17 +41,17 @@
                     </div>
                     <div class="card-body">
                         <form method="POST" action="{{ url_for('paldea_app.add_transaction') }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            {{ transaction_form.csrf_token }}
                             <div class="mb-3">
-                                <label class="form-label">Description</label>
-                                <input type="text" class="form-control" name="description" placeholder="Transaction description" required>
+                                {{ transaction_form.description.label(class="form-label") }}
+                                {{ transaction_form.description(class="form-control", placeholder="Transaction description") }}
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Amount</label>
-                                <input type="number" step="0.01" class="form-control" name="amount" placeholder="Amount" required>
+                                {{ transaction_form.amount.label(class="form-label") }}
+                                {{ transaction_form.amount(class="form-control", placeholder="Amount") }}
                             </div>
                             <input type="hidden" name="type" value="income">
-                            <button type="submit" class="btn btn-primary w-100">Add Income</button>
+                            {{ transaction_form.submit(class="btn btn-primary w-100") }}
                         </form>
                     </div>
                 </div>
@@ -62,17 +62,17 @@
                     </div>
                     <div class="card-body">
                         <form method="POST" action="{{ url_for('paldea_app.add_transaction') }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            {{ transaction_form.csrf_token }}
                             <div class="mb-3">
-                                <label class="form-label">Description</label>
-                                <input type="text" class="form-control" name="description" placeholder="Transaction description" required>
+                                {{ transaction_form.description.label(class="form-label") }}
+                                {{ transaction_form.description(class="form-control", placeholder="Transaction description") }}
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Amount</label>
-                                <input type="number" step="0.01" class="form-control" name="amount" placeholder="Amount" required>
+                                {{ transaction_form.amount.label(class="form-label") }}
+                                {{ transaction_form.amount(class="form-control", placeholder="Amount") }}
                             </div>
                             <input type="hidden" name="type" value="expense">
-                            <button type="submit" class="btn btn-success w-100">Add Expense</button>
+                            {{ transaction_form.submit(class="btn btn-success w-100") }}
                         </form>
                     </div>
                 </div>

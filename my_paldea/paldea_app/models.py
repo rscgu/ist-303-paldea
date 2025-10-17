@@ -17,7 +17,10 @@ class User(UserMixin,db.Model):
 
     def __init__(self, username, password, email):
         self.username = username
-        self.pwdhash = generate_password_hash(password)
+        if password:
+            self.pwdhash = generate_password_hash(password, method='pbkdf2:sha256')
+        else:
+            self.pwdhash = ''
         self.email = email
 
     def get_total_expenses(self):
@@ -87,11 +90,7 @@ class RegistrationForm(FlaskForm):
     confirm = PasswordField('Confirm Password', validators=[InputRequired(), EqualTo('password')])
     submit = SubmitField('Register')
 class LoginForm(FlaskForm):
-    # email = StringField('Email', validators=[InputRequired(), Email()])
-    #username = StringField('Username', [InputRequired()])
     username = StringField('Username', validators=[InputRequired(), Length(min=3, max=50)])
-    email = StringField('Email', validators=[InputRequired(), Email()])
-    #PasswordField = PasswordField('Password', [InputRequired()])
     password = PasswordField('Password', validators=[InputRequired()])
     submit = SubmitField('Login')
 

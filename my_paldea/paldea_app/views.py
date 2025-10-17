@@ -107,8 +107,8 @@ def profile():
 @login_required
 def home():
     budget_form = BudgetForm()
-    expense_form = ExpenseForm()
-    return render_template('home.html', budget_form=budget_form, expense_form=expense_form)
+    transaction_form = TransactionForm()
+    return render_template('home.html', budget_form=budget_form, transaction_form=transaction_form)
 
 @paldea_app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -158,17 +158,13 @@ def login():
 
         # --- Try local DB login first ---
         user = User.query.filter_by(username=username).first()
-        if user:
-            if bcrypt.checkpw(password.encode(), user.pwdhash):
-                login_user(user)
-                session["user_id"] = user.id
-                flash("Logged in successfully!", "success")
-                return redirect(url_for("paldea_app.home"))
-            else:
-                flash("Invalid password", "danger")
-                return render_template("login.html", form=form)
+        if user and user.check_password(password):
+            login_user(user)
+            session["user_id"] = user.id
+            flash("Logged in successfully!", "success")
+            return redirect(url_for("paldea_app.home"))
         else:
-            flash("User not found", "danger")
+            flash("Invalid username or password", "danger")
             return render_template("login.html", form=form)
 
     # GET request or failed POST → show form
@@ -296,7 +292,7 @@ def ldap_login():
           conn = get_ldap_connection()
           conn.simple_bind_s('cn=%s,dc=example. dc=org' % username, password)
 
-        except ldap3.INVALID_CREDENTIALS:
+        except Exception as e:
             flash('Invalid username or password. Please try again.','danger')
             return render_template('login.html', form=form)
         user=User.query.filter_by(username=username).filter()
