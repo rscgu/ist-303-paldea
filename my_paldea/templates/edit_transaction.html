@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block container %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Edit Transaction</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.csrf_token }}
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", placeholder="Transaction description") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.amount.label(class="form-label") }}
+                            {{ form.amount(class="form-control", placeholder="Amount") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.type.label(class="form-label") }}
+                            {{ form.type(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.category.label(class="form-label") }}
+                            {{ form.category(class="form-control") }}
+                        </div>
+                        {{ form.submit(class="btn btn-primary w-100") }}
+                    </form>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <a href="{{ url_for('paldea_app.home') }}" class="btn btn-secondary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

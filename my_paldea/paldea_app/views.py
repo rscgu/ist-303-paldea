@@ -6,7 +6,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from my_paldea import db,login_manager,bcrypt
 from my_paldea.utlities import get_ldap_connection
 from authlib.integrations.flask_client import OAuth
-from my_paldea.paldea_app.models import User, RegistrationForm,LoginForm, BudgetForm, ExpenseForm, Expense, Transaction, TransactionForm
+from my_paldea.paldea_app.models import User, RegistrationForm,LoginForm, BudgetForm, ExpenseForm, Expense, Transaction, TransactionForm, Category, CategoryBudget, CategoryBudgetForm, Goal, GoalForm
 #from models import User, RegistrationForm,LoginForm
 #from flask_dance.facebook import make_facebook_blueprint, facebook
 #from flask_dance.facebook import make_facebook_blueprint, facebook
@@ -106,9 +106,59 @@ def profile():
 @paldea_app.route('/home')
 @login_required
 def home():
+    from datetime import datetime, timedelta
     budget_form = BudgetForm()
     transaction_form = TransactionForm()
-    return render_template('home.html', budget_form=budget_form, transaction_form=transaction_form)
+    category_budget_form = CategoryBudgetForm()
+    goal_form = GoalForm()
+    transactions = Transaction.query.filter_by(user_id=current_user.id).order_by(Transaction.date.desc()).all()
+    categories = Category.query.all()
+    category_budgets = CategoryBudget.query.filter_by(user_id=current_user.id).all()
+    goals = Goal.query.filter_by(user_id=current_user.id).all()
+
+    # Populate form choices
+    transaction_form.category.choices = [(c.id, c.name) for c in categories]
+    category_budget_form.category.choices = [(c.id, c.name) for c in categories]
+
+    # Filter transactions based on query params
+    filter_type = request.args.get('filter_type')
+    filter_period = request.args.get('filter_period')
+    now = datetime.utcnow()
+    if filter_type:
+        transactions = [t for t in transactions if t.type == filter_type]
+    if filter_period:
+        if filter_period == 'week':
+            start_date = now - timedelta(days=7)
+        elif filter_period == 'month':
+            start_date = datetime(now.year, now.month, 1)
+        elif filter_period == 'year':
+            start_date = datetime(now.year, 1, 1)
+        transactions = [t for t in transactions if t.date >= start_date]
+
+    # Calculate spent per category for current month
+    current_month_start = datetime(now.year, now.month, 1)
+    category_spent = {}
+    for budget in category_budgets:
+        spent = sum(t.amount for t in transactions if t.category_id == budget.category_id and t.type == 'expense' and t.date >= current_month_start)
+        category_spent[budget.category_id] = spent
+
+    # Data for charts
+    pie_labels = [cb.category.name for cb in category_budgets]
+    pie_data = [category_spent.get(cb.category_id, 0) for cb in category_budgets]
+
+    # Monthly income vs expense bar chart (current month)
+    monthly_transactions = [t for t in transactions if t.date.month == now.month and t.date.year == now.year]
+    income = sum(t.amount for t in monthly_transactions if t.type == 'income')
+    expense = sum(t.amount for t in monthly_transactions if t.type == 'expense')
+    bar_labels = ['Income', 'Expense']
+    bar_data = [income, expense]
+
+    # Summary
+    total_income = sum(t.amount for t in transactions if t.type == 'income')
+    total_expenses = sum(t.amount for t in transactions if t.type == 'expense')
+    cash_flow = total_income - total_expenses
+
+    return render_template('home.html', budget_form=budget_form, transaction_form=transaction_form, category_budget_form=category_budget_form, goal_form=goal_form, transactions=transactions, categories=categories, category_budgets=category_budgets, goals=goals, category_spent=category_spent, now=now, pie_labels=pie_labels, pie_data=pie_data, bar_labels=bar_labels, bar_data=bar_data, total_income=total_income, total_expenses=total_expenses, cash_flow=cash_flow)
 
 @paldea_app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -272,11 +322,83 @@ def add_expense():
 @login_required
 def add_transaction():
     form = TransactionForm()
+    categories = Category.query.all()
+    form.category.choices = [(c.id, c.name) for c in categories]
     if form.validate_on_submit():
-        transaction = Transaction(description=form.description.data, amount=form.amount.data, type=form.type.data, user_id=current_user.id)
+        transaction = Transaction(description=form.description.data, amount=form.amount.data, type=form.type.data, category_id=form.category.data, user_id=current_user.id)
         db.session.add(transaction)
         db.session.commit()
         flash('Transaction added successfully!', 'success')
+    return redirect(url_for('paldea_app.home'))
+
+@paldea_app.route('/edit_transaction/<int:transaction_id>', methods=['GET', 'POST'])
+@login_required
+def edit_transaction(transaction_id):
+    transaction = Transaction.query.get_or_404(transaction_id)
+    if transaction.user_id != current_user.id:
+        flash('You do not have permission to edit this transaction.', 'danger')
+        return redirect(url_for('paldea_app.home'))
+
+    form = TransactionForm()
+    categories = Category.query.all()
+    form.category.choices = [(c.id, c.name) for c in categories]
+    if request.method == 'GET':
+        form.description.data = transaction.description
+        form.amount.data = transaction.amount
+        form.type.data = transaction.type
+        form.category.data = transaction.category_id
+
+    if form.validate_on_submit():
+        transaction.description = form.description.data
+        transaction.amount = form.amount.data
+        transaction.type = form.type.data
+        transaction.category_id = form.category.data
+        db.session.commit()
+        flash('Transaction updated successfully!', 'success')
+        return redirect(url_for('paldea_app.home'))
+
+    return render_template('edit_transaction.html', form=form, transaction=transaction)
+
+@paldea_app.route('/delete_transaction/<int:transaction_id>', methods=['POST'])
+@login_required
+def delete_transaction(transaction_id):
+    transaction = Transaction.query.get_or_404(transaction_id)
+    if transaction.user_id != current_user.id:
+        flash('You do not have permission to delete this transaction.', 'danger')
+        return redirect(url_for('paldea_app.home'))
+
+    db.session.delete(transaction)
+    db.session.commit()
+    flash('Transaction deleted successfully!', 'success')
+    return redirect(url_for('paldea_app.home'))
+
+@paldea_app.route('/set_category_budget', methods=['POST'])
+@login_required
+def set_category_budget():
+    form = CategoryBudgetForm()
+    categories = Category.query.all()
+    form.category.choices = [(c.id, c.name) for c in categories]
+    if form.validate_on_submit():
+        # Check if budget already exists for this category and user
+        existing_budget = CategoryBudget.query.filter_by(user_id=current_user.id, category_id=form.category.data).first()
+        if existing_budget:
+            existing_budget.budget_amount = form.budget_amount.data
+        else:
+            budget = CategoryBudget(user_id=current_user.id, category_id=form.category.data, budget_amount=form.budget_amount.data)
+            db.session.add(budget)
+        db.session.commit()
+        flash('Category budget set successfully!', 'success')
+    return redirect(url_for('paldea_app.home'))
+
+@paldea_app.route('/set_goal', methods=['POST'])
+@login_required
+def set_goal():
+    form = GoalForm()
+    if form.validate_on_submit():
+        goal = Goal(user_id=current_user.id, goal_type=form.goal_type.data, target_amount=form.target_amount.data, deadline=form.deadline.data, description=form.description.data)
+        db.session.add(goal)
+        db.session.commit()
+        flash('Goal set successfully!', 'success')
     return redirect(url_for('paldea_app.home'))
 
 @paldea_app.route('/ldap-login', endpoint='ldap_login', methods=['GET','POST'])

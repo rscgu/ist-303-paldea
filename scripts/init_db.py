@@ -1,14 +1,17 @@
-import sqlite3
+from my_paldea import db, create_app
+from my_paldea.paldea_app.models import Category
 
-connection = sqlite3.connect('database.db')
+app = create_app()
 
-with connection:
-    connection.execute('''
-        CREATE TABLE IF NOT EXISTS posts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            content TEXT NOT NULL
-        );
-    ''')
+with app.app_context():
+    db.create_all()
 
-print("Database initialized.")
+    # Add default categories if they don't exist
+    default_categories = ['Groceries', 'Entertainment', 'Rent', 'Utilities', 'Transportation', 'Dining', 'Healthcare', 'Shopping', 'Salary', 'Freelance', 'Investments']
+    for cat_name in default_categories:
+        if not Category.query.filter_by(name=cat_name).first():
+            category = Category(name=cat_name)
+            db.session.add(category)
+    db.session.commit()
+
+print("Database initialized with tables and default categories.")

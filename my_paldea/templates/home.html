@@ -37,7 +37,7 @@
 
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h4>Add Income Transaction</h4>
+                        <h4>Add Transaction</h4>
                     </div>
                     <div class="card-body">
                         <form method="POST" action="{{ url_for('paldea_app.add_transaction') }}">
@@ -50,7 +50,14 @@
                                 {{ transaction_form.amount.label(class="form-label") }}
                                 {{ transaction_form.amount(class="form-control", placeholder="Amount") }}
                             </div>
-                            <input type="hidden" name="type" value="income">
+                            <div class="mb-3">
+                                {{ transaction_form.type.label(class="form-label") }}
+                                {{ transaction_form.type(class="form-control") }}
+                            </div>
+                            <div class="mb-3">
+                                {{ transaction_form.category.label(class="form-label") }}
+                                {{ transaction_form.category(class="form-control") }}
+                            </div>
                             {{ transaction_form.submit(class="btn btn-primary w-100") }}
                         </form>
                     </div>
@@ -58,38 +65,268 @@
 
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h4>Add Expense Transaction</h4>
+                        <h4>Set Category Budget</h4>
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="{{ url_for('paldea_app.add_transaction') }}">
-                            {{ transaction_form.csrf_token }}
+                        <form method="POST" action="{{ url_for('paldea_app.set_category_budget') }}">
+                            {{ category_budget_form.csrf_token }}
                             <div class="mb-3">
-                                {{ transaction_form.description.label(class="form-label") }}
-                                {{ transaction_form.description(class="form-control", placeholder="Transaction description") }}
+                                {{ category_budget_form.category.label(class="form-label") }}
+                                {{ category_budget_form.category(class="form-control") }}
                             </div>
                             <div class="mb-3">
-                                {{ transaction_form.amount.label(class="form-label") }}
-                                {{ transaction_form.amount(class="form-control", placeholder="Amount") }}
+                                {{ category_budget_form.budget_amount.label(class="form-label") }}
+                                {{ category_budget_form.budget_amount(class="form-control", placeholder="Budget amount") }}
                             </div>
-                            <input type="hidden" name="type" value="expense">
-                            {{ transaction_form.submit(class="btn btn-success w-100") }}
+                            {{ category_budget_form.submit(class="btn btn-info w-100") }}
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Set Financial Goal</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('paldea_app.set_goal') }}">
+                            {{ goal_form.csrf_token }}
+                            <div class="mb-3">
+                                {{ goal_form.goal_type.label(class="form-label") }}
+                                {{ goal_form.goal_type(class="form-control") }}
+                            </div>
+                            <div class="mb-3">
+                                {{ goal_form.target_amount.label(class="form-label") }}
+                                {{ goal_form.target_amount(class="form-control", placeholder="Target amount") }}
+                            </div>
+                            <div class="mb-3">
+                                {{ goal_form.deadline.label(class="form-label") }}
+                                {{ goal_form.deadline(class="form-control") }}
+                            </div>
+                            <div class="mb-3">
+                                {{ goal_form.description.label(class="form-label") }}
+                                {{ goal_form.description(class="form-control", placeholder="Optional description") }}
+                            </div>
+                            {{ goal_form.submit(class="btn btn-info w-100") }}
                         </form>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Budget Summary -->
+        <!-- Transactions List with Filters -->
         <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Transaction History</h4>
+                        <form method="GET" class="d-flex mb-3">
+                            <select name="filter_type" class="form-select me-2">
+                                <option value="">All Types</option>
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                            <select name="filter_period" class="form-select me-2">
+                                <option value="">All Time</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="year">This Year</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </form>
+                    </div>
+                    <div class="card-body">
+                        {% if transactions %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Description</th>
+                                            <th>Type</th>
+                                            <th>Category</th>
+                                            <th>Amount</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for transaction in transactions %}
+                                            <tr>
+                                                <td>{{ transaction.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                <td>{{ transaction.description }}</td>
+                                                <td>
+                                                    {% if transaction.type == 'income' %}
+                                                        <span class="badge bg-success">Income</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Expense</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ transaction.category.name if transaction.category else 'N/A' }}</td>
+                                                <td>${{ "%.2f"|format(transaction.amount) }}</td>
+                                                <td>
+                                                    <a href="{{ url_for('paldea_app.edit_transaction', transaction_id=transaction.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                                    <form method="POST" action="{{ url_for('paldea_app.delete_transaction', transaction_id=transaction.id) }}" style="display:inline;">
+                                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this transaction?')">Delete</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No transactions yet. Add some income or expense transactions above.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Budgets -->
+        {% if category_budgets %}
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Category Budgets</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Budget Amount</th>
+                                        <th>Spent This Month</th>
+                                        <th>Remaining</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for budget in category_budgets %}
+                                        {% set spent = 0 %}
+                                        {% for transaction in transactions %}
+                                            {% if transaction.category_id == budget.category_id and transaction.type == 'expense' and transaction.date >= now.replace(day=1) %}
+                                                {% set spent = spent + transaction.amount %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% set remaining = budget.budget_amount - spent %}
+                                        <tr>
+                                            <td>{{ budget.category.name }}</td>
+                                            <td>${{ "%.2f"|format(budget.budget_amount) }}</td>
+                                            <td>${{ "%.2f"|format(spent) }}</td>
+                                            <td>${{ "%.2f"|format(remaining) }}</td>
+                                            <td>
+                                                {% if remaining < 0 %}
+                                                    <span class="badge bg-danger">Over Budget</span>
+                                                {% elif spent / budget.budget_amount > 0.7 %}
+                                                    <span class="badge bg-warning">Near Limit</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">On Track</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Charts and Summary -->
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Category Spending Pie Chart</h4>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="pieChart" width="400" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Monthly Income vs Expense Bar Chart</h4>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="barChart" width="400" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Summary -->
+        <div class="row justify-content-center mt-4">
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
-                        <h4>Budget Summary</h4>
+                        <h4>Financial Summary Dashboard</h4>
                     </div>
                     <div class="card-body">
+                        <p><strong>Total Income:</strong> ${{ "%.2f"|format(total_income) }}</p>
+                        <p><strong>Total Expenses:</strong> ${{ "%.2f"|format(total_expenses) }}</p>
+                        <p><strong>Cash Flow:</strong> ${{ "%.2f"|format(cash_flow) }}</p>
                         <p><strong>Monthly Budget:</strong> ${{ "%.2f"|format(current_user.budget) if current_user.budget else "Not set" }}</p>
-                        <p><strong>Total Expenses:</strong> ${{ "%.2f"|format(current_user.get_total_expenses()) }}</p>
                         <p><strong>Remaining Budget:</strong> ${{ "%.2f"|format(current_user.budget - current_user.get_total_expenses()) if current_user.budget else "N/A" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Budgets with Progress Bars -->
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Category Budgets</h4>
+                    </div>
+                    <div class="card-body">
+                        {% for budget in category_budgets %}
+                            {% set spent = category_spent.get(budget.category_id, 0) %}
+                            {% set percentage = (spent / budget.budget_amount * 100) if budget.budget_amount > 0 else 0 %}
+                            {% set progress_class = 'bg-success' if percentage < 70 else 'bg-warning' if percentage < 90 else 'bg-danger' %}
+                            <div class="mb-3">
+                                <h5>{{ budget.category.name }}</h5>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar {{ progress_class }}" role="progressbar" style="width: {{ percentage }}%" aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <p class="mb-0">${{ "%.2f"|format(spent) }} of ${{ "%.2f"|format(budget.budget_amount) }} spent ({{ "%.1f"|format(percentage) }}%)</p>
+                                {% if percentage > 100 %}
+                                    <div class="alert alert-danger mt-2">
+                                        <strong>Alert!</strong> You have exceeded your budget for {{ budget.category.name }}!
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goals Section -->
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Financial Goals</h4>
+                    </div>
+                    <div class="card-body">
+                        {% for goal in goals %}
+                            {% set progress = (goal.current_amount / goal.target_amount * 100) if goal.target_amount > 0 else 0 %}
+                            <div class="mb-3">
+                                <h5>{{ goal.goal_type.title() }} Goal</h5>
+                                <p>{{ goal.description or 'No description' }}</p>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ progress }}%" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <p class="mb-0">${{ "%.2f"|format(goal.current_amount) }} of ${{ "%.2f"|format(goal.target_amount) }} ({{ "%.1f"|format(progress) }}%)</p>
+                                <p class="text-muted">Deadline: {{ goal.deadline.strftime('%Y-%m-%d') }}</p>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -105,4 +342,39 @@
         </div>
     {% endif %}
 </div>
+
+<script>
+    // Pie Chart
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    const pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ pie_labels|tojson }},
+            datasets: [{
+                data: {{ pie_data|tojson }},
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+            }]
+        }
+    });
+
+    // Bar Chart
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    const barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ bar_labels|tojson }},
+            datasets: [{
+                data: {{ bar_data|tojson }},
+                backgroundColor: ['#36A2EB', '#FF6384']
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}
