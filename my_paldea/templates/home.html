@@ -281,8 +281,10 @@
                         <p><strong>Total Income:</strong> ${{ "%.2f"|format(total_income) }}</p>
                         <p><strong>Total Expenses:</strong> ${{ "%.2f"|format(total_expenses) }}</p>
                         <p><strong>Cash Flow:</strong> ${{ "%.2f"|format(cash_flow) }}</p>
+                        {% if not demo %}
                         <p><strong>Monthly Budget:</strong> ${{ "%.2f"|format(current_user.budget) if current_user.budget else "Not set" }}</p>
                         <p><strong>Remaining Budget:</strong> ${{ "%.2f"|format(current_user.budget - current_user.get_total_expenses()) if current_user.budget else "N/A" }}</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -355,36 +357,47 @@
 </div>
 
 <script>
-    // Pie Chart
-    const pieCtx = document.getElementById('pieChart').getContext('2d');
-    const pieChart = new Chart(pieCtx, {
-        type: 'pie',
-        data: {
-            labels: {{ pie_labels|tojson }},
-            datasets: [{
-                data: {{ pie_data|tojson }},
-                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
-            }]
-        }
-    });
-
-    // Bar Chart
-    const barCtx = document.getElementById('barChart').getContext('2d');
-    const barChart = new Chart(barCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ bar_labels|tojson }},
-            datasets: [{
-                data: {{ bar_data|tojson }},
-                backgroundColor: ['#36A2EB', '#FF6384']
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
+    document.addEventListener('DOMContentLoaded', function() {
+        // Pie Chart
+        const pieCtx = document.getElementById('pieChart');
+        if (pieCtx) {
+            const pieChart = new Chart(pieCtx.getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: {{ pie_labels|tojson }},
+                    datasets: [{
+                        data: {{ pie_data|tojson }},
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+                    }]
                 }
-            }
+            });
+        }
+
+        // Bar Chart
+        const barCtx = document.getElementById('barChart');
+        if (barCtx) {
+            const barChart = new Chart(barCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: {{ bar_labels|tojson }},
+                    datasets: [{
+                        data: {{ bar_data|tojson }},
+                        backgroundColor: ['#36A2EB', '#FF6384']
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
         }
     });
 </script>
