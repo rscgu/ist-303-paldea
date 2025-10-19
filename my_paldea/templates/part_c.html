@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block container %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="mb-4">Part C: Team Member Tasks Presentation</h1>
+        <p class="lead">Interactive Demo of Assigned Tasks for the Personal Finance Tracker Project</p>
+    </div>
+
+    <!-- Background and Purpose Section -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h3>Project Background and Purpose</h3>
+        </div>
+        <div class="card-body">
+            <h5>Background</h5>
+            <p>The Personal Finance Tracker is an application designed to help users record daily financial transactions, categorize expenses, and visualize spending patterns. It provides a simple, user-friendly interface connected to an underlying database, enabling structured storage and retrieval of financial data. The project was developed as part of IST 303 coursework, focusing on building a comprehensive financial management tool.</p>
+
+            <h5>Purpose</h5>
+            <p>The primary purpose of this application is to bridge the gap between raw financial data and meaningful insights. By allowing users to track income, expenses, budgets, and goals, the app makes it easy for users to understand and control their finances. It serves various stakeholders including end users (students, professionals, families), developers, UI/UX designers, data analysts, and testers. The app aims to provide a unified system for financial management without requiring multiple services or signups.</p>
+
+            <h5>Key Features</h5>
+            <ul>
+                <li>Transaction recording and categorization (income and expense)</li>
+                <li>Budget setting and progress tracking with visual indicators</li>
+                <li>Financial goal setting and achievement monitoring</li>
+                <li>Data visualization through charts and summaries</li>
+                <li>User authentication and secure data management</li>
+                <li>Filtering and reporting capabilities</li>
+            </ul>
+
+            <h5>Team Members</h5>
+            <p>The development team consists of Samantha Aguirre, Gerves Francois Baniakina, Qiao Huang, Rachan Sailamai, and Manish Shrivastav, each assigned to specific epics and tasks as outlined below.</p>
+        </div>
+    </div>
+
+    <div class="accordion" id="teamAccordion">
+        {% for member, details in team_members.items() %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+                    <strong>{{ member }}</strong> - {{ details.epic }}
+                </button>
+            </h2>
+            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#teamAccordion">
+                <div class="accordion-body">
+                    <h5>Linked User Stories: {{ details.user_stories }}</h5>
+                    <p><em>{{ details.summary }}</em></p>
+                    <h6>Assigned Tasks:</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for task in details.tasks %}
+                        <li class="list-group-item">{{ task }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="text-center mt-4">
+        <button class="btn btn-primary" onclick="toggleAll()">Toggle All Sections</button>
+    </div>
+</div>
+
+<script>
+function toggleAll() {
+    const collapses = document.querySelectorAll('.accordion-collapse');
+    const isExpanded = Array.from(collapses).some(collapse => collapse.classList.contains('show'));
+    collapses.forEach(collapse => {
+        if (isExpanded) {
+            collapse.classList.remove('show');
+        } else {
+            collapse.classList.add('show');
+        }
+    });
+}
+</script>
+{% endblock %}

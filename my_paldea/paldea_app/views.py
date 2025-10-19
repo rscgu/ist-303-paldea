@@ -143,8 +143,8 @@ def home():
         category_spent[budget.category_id] = spent
 
     # Data for charts
-    pie_labels = [cb.category.name for cb in category_budgets]
-    pie_data = [category_spent.get(cb.category_id, 0) for cb in category_budgets]
+    pie_labels = [cb.category.name for cb in category_budgets if cb.category]
+    pie_data = [category_spent.get(cb.category_id, 0) for cb in category_budgets if cb.category]
 
     # Monthly income vs expense bar chart (current month)
     monthly_transactions = [t for t in transactions if t.date.month == now.month and t.date.year == now.year]
@@ -429,4 +429,124 @@ def ldap_login():
     if form.errors:
         flash(form.errors, 'danger')
     return render_template('login.html', form=form)
+
+@paldea_app.route('/part-c')
+def part_c():
+    team_members = {
+        'Samantha Aguirre': {
+            'epic': 'Epic 1.2: Core Transaction Management Continued',
+            'user_stories': '1, 6, 7',
+            'summary': 'These stories describe the need for a unified system where users can record and categorize both income and expense transactions without relying on multiple services.',
+            'tasks': [
+                'Task 5: Categorize transactions by income/expense type. (Supports Stories 6 & 7)',
+                'Task 6: Display transactions in a list view. (Supports Stories 6 & 7)',
+                'Task 7: Implement delete/edit transaction functionality. (Enhances Stories 6 & 7 usability)'
+            ]
+        },
+        'Gerves Francois Baniakina': {
+            'epic': 'Epic 1: Core Transaction Management',
+            'user_stories': '1, 6, 7',
+            'summary': 'These stories describe the need for a unified system where users can record and categorize both income and expense transactions without relying on multiple services.',
+            'tasks': [
+                'Task 1: Set up user authentication (login, register). (Supports Story 1: unified financial system with no extra signups)',
+                'Task 2: Create database schema (users, transactions, categories). (Foundation for Stories 6 & 7)',
+                'Task 3: Implement "Add income transaction" form. (Supports Story 6: income tracker)',
+                'Task 4: Implement "Add expense transaction" form. (Supports Story 7: expense tracker)'
+            ]
+        },
+        'Qiao Huang': {
+            'epic': 'Epic 2: Budgeting & Alerts',
+            'user_stories': '3, 4, 14',
+            'summary': 'These stories address monthly and annual financial planning, user-defined savings goals, and system alerts when overspending.',
+            'tasks': [
+                'Task 8: Monthly Budget Feature - Allows users to set spending limits for different expense categories. Users select a category and enter a dollar amount. System stores these budget limits in the database. User interaction: Simple form with dropdown menu for category selection, text input for budget amount, save button. Technical requirements: Database table for user_id, category, budget_amount, time_period; form validation; backend route.',
+                'Task 9: Progress Bar Implementation - Calculates percentage of budget used based on transaction data. Displays visual progress bar showing spending vs. limit. Shows dollar amounts (spent, remaining, total). How it works: Query database for transactions in selected category for current month, sum amounts, calculate percentage. Display progress bar filled to that percentage. Visual elements: Progress bar (CSS/Bootstrap), text showing "$X of $Y spent", "$Z remaining", color coding (green <70%, yellow 70-90%, red >90%).'
+            ]
+        },
+        'Rachan Sailamai': {
+            'epic': 'Epic 2.2: Budgeting & Alerts Continued',
+            'user_stories': '3, 4, 14',
+            'summary': 'These stories address monthly and annual financial planning, user-defined savings goals, and system alerts when overspending.',
+            'tasks': [
+                'Task 10: Show alert when budget is exceeded. (Directly supports Story 4: alerts for overspending)',
+                'Task 11: Create goal-setting form for savings/investments/loans. (Supports Story 14: annual financial targets)',
+                'Task 12: Implement progress markers toward goals. (Supports Story 14: tracking goal achievement)'
+            ]
+        },
+        'Manish Shrivastav': {
+            'epic': 'Epic 3: Visualization & Reporting',
+            'user_stories': '2, 5',
+            'summary': 'These stories highlight the need for financial summaries, filters, and visualizations to help users interpret their financial data.',
+            'tasks': [
+                'Task 13: Integrate Chart.js for category spending pie chart. (Supports Story 2: financial dashboard, Story 5: custom filters with summaries)',
+                'Task 14: Add monthly income vs. expense bar chart. (Supports Story 2: monthly budget & summaries)',
+                'Task 15: Implement filters by date (week, month, year). (Supports Story 5: trace financial progress over time)',
+                'Task 16: Generate summary dashboard (income, expenses, cash flow). (Supports Story 2: accessible financial dashboard)'
+            ]
+        }
+    }
+    return render_template('part_c.html', team_members=team_members)
+
+@paldea_app.route('/demo')
+def demo():
+    # Sample data for demo
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    categories = Category.query.all()
+    sample_transactions = [
+        Transaction(description='Salary', amount=3000.00, type='income', category_id=1, user_id=1, date=now - timedelta(days=5)),
+        Transaction(description='Groceries', amount=150.00, type='expense', category_id=2, user_id=1, date=now - timedelta(days=3)),
+        Transaction(description='Rent', amount=1200.00, type='expense', category_id=3, user_id=1, date=now - timedelta(days=1)),
+        Transaction(description='Freelance', amount=500.00, type='income', category_id=1, user_id=1, date=now - timedelta(days=10)),
+        Transaction(description='Entertainment', amount=100.00, type='expense', category_id=4, user_id=1, date=now - timedelta(days=7)),
+    ]
+    sample_category_budgets = [
+        CategoryBudget(user_id=1, category_id=2, budget_amount=200.00),
+        CategoryBudget(user_id=1, category_id=3, budget_amount=1300.00),
+        CategoryBudget(user_id=1, category_id=4, budget_amount=150.00),
+    ]
+    sample_goals = [
+        Goal(user_id=1, goal_type='Savings', target_amount=5000.00, deadline=now + timedelta(days=365), description='Emergency fund'),
+        Goal(user_id=1, goal_type='Investment', target_amount=10000.00, deadline=now + timedelta(days=730), description='Retirement savings'),
+    ]
+
+    # Calculate demo data
+    transactions = sample_transactions
+    category_budgets = sample_category_budgets
+    goals = sample_goals
+
+    budget_form = BudgetForm()
+    transaction_form = TransactionForm()
+    category_budget_form = CategoryBudgetForm()
+    goal_form = GoalForm()
+
+    transaction_form.category.choices = [(c.id, c.name) for c in categories]
+    category_budget_form.category.choices = [(c.id, c.name) for c in categories]
+
+    # Filter transactions (demo has no filters applied)
+    filter_type = None
+    filter_period = None
+
+    # Calculate spent per category for current month
+    current_month_start = datetime(now.year, now.month, 1)
+    category_spent = {}
+    for budget in category_budgets:
+        spent = sum(t.amount for t in transactions if t.category_id == budget.category_id and t.type == 'expense' and t.date >= current_month_start)
+        category_spent[budget.category_id] = spent
+
+    # Data for charts
+    pie_labels = [cb.category.name for cb in category_budgets if cb.category and category_spent.get(cb.category_id, 0) > 0]
+    pie_data = [category_spent.get(cb.category_id, 0) for cb in category_budgets if cb.category and category_spent.get(cb.category_id, 0) > 0]
+
+    monthly_transactions = [t for t in transactions if t.date.month == now.month and t.date.year == now.year]
+    income = sum(t.amount for t in monthly_transactions if t.type == 'income')
+    expense = sum(t.amount for t in monthly_transactions if t.type == 'expense')
+    bar_labels = ['Income', 'Expense']
+    bar_data = [income, expense]
+
+    total_income = sum(t.amount for t in transactions if t.type == 'income')
+    total_expenses = sum(t.amount for t in transactions if t.type == 'expense')
+    cash_flow = total_income - total_expenses
+
+    return render_template('home.html', budget_form=budget_form, transaction_form=transaction_form, category_budget_form=category_budget_form, goal_form=goal_form, transactions=transactions, categories=categories, category_budgets=category_budgets, goals=goals, category_spent=category_spent, now=now, pie_labels=pie_labels, pie_data=pie_data, bar_labels=bar_labels, bar_data=bar_data, total_income=total_income, total_expenses=total_expenses, cash_flow=cash_flow, demo=True)
     
