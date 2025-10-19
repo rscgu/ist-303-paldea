@@ -11,7 +11,8 @@
         <h2 class="mb-4">Personal Financial Budget Planning</h2>
     </div>
 
-    {% if current_user.is_authenticated %}
+    {% if demo or current_user.is_authenticated %}
+        {% if not demo %}
         <h3 class="mb-3 text-center">Hey {{ current_user.username }}!</h3>
 
         <!-- Budget Alert -->
@@ -19,6 +20,7 @@
             <div class="alert alert-danger text-center" role="alert">
                 <strong>Warning!</strong> You have exceeded your budget! Total expenses: ${{ "%.2f"|format(current_user.get_total_expenses()) }} / Budget: ${{ "%.2f"|format(current_user.budget) }}
             </div>
+        {% endif %}
         {% endif %}
 
         <!-- Budget and Expense Forms -->

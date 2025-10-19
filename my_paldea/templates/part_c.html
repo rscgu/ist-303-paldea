@@ -1,9 +1,13 @@
 {% extends 'base.html' %}
 {% block container %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <div class="container mt-5">
     <div class="text-center mb-5">
         <h1 class="mb-4">Part C: Team Member Tasks Presentation</h1>
         <p class="lead">Interactive Demo of Assigned Tasks for the Personal Finance Tracker Project</p>
+        <p class="text-muted">Code Repository: <a href="https://github.com/rscgu/ist-303-paldea" target="_blank" rel="noopener">https://github.com/rscgu/ist-303-paldea</a></p>
+        <p class="text-muted">Run locally: <code>python run.py</code> then visit <a href="http://127.0.0.1:5000/demo">http://127.0.0.1:5000/demo</a> for demo or <a href="http://127.0.0.1:5000/part-c">http://127.0.0.1:5000/part-c</a> for this presentation</p>
     </div>
 
     <!-- Background and Purpose Section -->
@@ -51,28 +55,418 @@
                         <li class="list-group-item">{{ task }}</li>
                         {% endfor %}
                     </ul>
-                </div>
-            </div>
+                    <h6>Relevant Code Files:</h6>
+                    <ul class="list-group list-group-flush">
+                        {% if member == 'Samantha Aguirre' %}
+                        <li class="list-group-item"><code>my_paldea/paldea_app/views.py</code> - Transaction categorization logic</li>
+                        <li class="list-group-item"><code>my_paldea/templates/home.html</code> - Transaction list display</li>
+                        <li class="list-group-item"><code>my_paldea/paldea_app/models.py</code> - Transaction model with edit/delete methods</li>
+                        {% elif member == 'Gerves Francois Baniakina' %}
+                        <li class="list-group-item"><code>my_paldea/paldea_app/views.py</code> - Authentication routes (login, register)</li>
+                        <li class="list-group-item"><code>my_paldea/paldea_app/models.py</code> - User, Transaction, Category models</li>
+                        <li class="list-group-item"><code>scripts/init_db.py</code> - Database schema initialization</li>
+                        {% elif member == 'Qiao Huang' %}
+                        <li class="list-group-item"><code>my_paldea/paldea_app/views.py</code> - Budget setting and progress calculation</li>
+                        <li class="list-group-item"><code>my_paldea/paldea_app/models.py</code> - CategoryBudget model</li>
+                        <li class="list-group-item"><code>my_paldea/templates/home.html</code> - Progress bar UI components</li>
+                        {% elif member == 'Rachan Sailamai' %}
+                        <li class="list-group-item"><code>my_paldea/paldea_app/views.py</code> - Budget alert logic</li>
+                        <li class="list-group-item"><code>my_paldea/paldea_app/models.py</code> - Goal model with progress tracking</li>
+                        <li class="list-group-item"><code>my_paldea/templates/home.html</code> - Goal setting forms and progress markers</li>
+                        {% elif member == 'Manish Shrivastav' %}
+                        <li class="list-group-item"><code>my_paldea/templates/home.html</code> - Chart.js integration for pie and bar charts</li>
+                        <li class="list-group-item"><code>my_paldea/paldea_app/views.py</code> - Chart data preparation and filtering logic</li>
+                        <li class="list-group-item"><code>my_paldea/static/js/main.js</code> - Chart rendering and date filtering</li>
+                        {% endif %}
+                    </ul>
+                    <!-- Code Snippets and Explanations -->
+                    <div class="accordion mt-3" id="codeAccordion{{ loop.index }}">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="codeHeading{{ loop.index }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#codeCollapse{{ loop.index }}" aria-expanded="false" aria-controls="codeCollapse{{ loop.index }}">
+                                    Code Snippets and Explanations
+                                </button>
+                            </h2>
+                            <div id="codeCollapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="codeHeading{{ loop.index }}" data-bs-parent="#codeAccordion{{ loop.index }}">
+                                <div class="accordion-body">
+                                    {% if member == 'Samantha Aguirre' %}
+                                    <h6>File: my_paldea/paldea_app/views.py (Add Transaction Route)</h6>
+                                    <p>This route handles adding new transactions, categorizing them as income or expense, and associating them with categories.</p>
+                                    <pre><code class="language-python">@paldea_app.route('/add_transaction', methods=['POST'])
+@login_required
+def add_transaction():
+    form = TransactionForm()
+    categories = Category.query.all()
+    form.category.choices = [(c.id, c.name) for c in categories]
+    if form.validate_on_submit():
+        transaction = Transaction(description=form.description.data, amount=form.amount.data, type=form.type.data, category_id=form.category.data, user_id=current_user.id)
+        db.session.add(transaction)
+        db.session.commit()
+        flash('Transaction added successfully!', 'success')
+    return redirect(url_for('paldea_app.home'))</code></pre>
+
+                                    <h6>File: my_paldea/paldea_app/views.py (Edit Transaction Route)</h6>
+                                    <p>This route allows users to edit existing transactions, updating description, amount, type, and category.</p>
+                                    <pre><code class="language-python">@paldea_app.route('/edit_transaction/<int:transaction_id>', methods=['GET', 'POST'])
+@login_required
+def edit_transaction(transaction_id):
+    transaction = Transaction.query.get_or_404(transaction_id)
+    if transaction.user_id != current_user.id:
+        flash('You do not have permission to edit this transaction.', 'danger')
+        return redirect(url_for('paldea_app.home'))
+
+    form = TransactionForm()
+    categories = Category.query.all()
+    form.category.choices = [(c.id, c.name) for c in categories]
+    if request.method == 'GET':
+        form.description.data = transaction.description
+        form.amount.data = transaction.amount
+        form.type.data = transaction.type
+        form.category.data = transaction.category_id
+
+    if form.validate_on_submit():
+        transaction.description = form.description.data
+        transaction.amount = form.amount.data
+        transaction.type = form.type.data
+        transaction.category_id = form.category.data
+        db.session.commit()
+        flash('Transaction updated successfully!', 'success')
+        return redirect(url_for('paldea_app.home'))
+
+    return render_template('edit_transaction.html', form=form, transaction=transaction)</code></pre>
+
+                                    <h6>File: my_paldea/paldea_app/views.py (Delete Transaction Route)</h6>
+                                    <p>This route handles deletion of transactions with user permission checks.</p>
+                                    <pre><code class="language-python">@paldea_app.route('/delete_transaction/<int:transaction_id>', methods=['POST'])
+@login_required
+def delete_transaction(transaction_id):
+    transaction = Transaction.query.get_or_404(transaction_id)
+    if transaction.user_id != current_user.id:
+        flash('You do not have permission to delete this transaction.', 'danger')
+        return redirect(url_for('paldea_app.home'))
+
+    db.session.delete(transaction)
+    db.session.commit()
+    flash('Transaction deleted successfully!', 'success')
+    return redirect(url_for('paldea_app.home'))</code></pre>
+
+                                    <h6>File: my_paldea/templates/home.html (Transaction List Display)</h6>
+                                    <p>This template section renders the transaction history table with edit/delete actions.</p>
+                                    <pre><code class="language-html">{% raw %}{% for transaction in transactions %}
+    <tr>
+        <td>{{ transaction.date.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ transaction.description }}</td>
+        <td>
+            {% if transaction.type == 'income' %}
+                <span class="badge bg-success">Income</span>
+            {% else %}
+                <span class="badge bg-danger">Expense</span>
+            {% endif %}
+        </td>
+        <td>{{ transaction.category.name if transaction.category else 'N/A' }}</td>
+        <td>${{ "%.2f"|format(transaction.amount) }}</td>
+        <td>
+            <a href="{{ url_for('paldea_app.edit_transaction', transaction_id=transaction.id) }}" class="btn btn-sm btn-warning">Edit</a>
+            <form method="POST" action="{{ url_for('paldea_app.delete_transaction', transaction_id=transaction.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this transaction?')">Delete</button>
+            </form>
+        </td>
+    </tr>
+{% endfor %}{% endraw %}</code></pre>
+                                    {% elif member == 'Gerves Francois Baniakina' %}
+                                    <h6>File: my_paldea/paldea_app/views.py (Registration Route)</h6>
+                                    <p>This route handles user registration, validating input and creating new user accounts.</p>
+                                    <pre><code class="language-python">@paldea_app.route('/register', methods=['GET', 'POST'])
+def register():
+    if session.get('username') or current_user.is_authenticated:
+        flash('You are already logged in.', 'info')
+        return redirect(url_for('paldea_app.home'))
+
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        email = form.email.data
+
+        # Check if username or email already exists
+        existing_user = User.query.filter(
+            (User.username == username) | (User.email == email)
+        ).first()
+        if existing_user:
+            if existing_user.username == username:
+                flash('This username is already taken. Please choose another.', 'warning')
+            if existing_user.email == email:
+                flash('This email is already registered. Please use another.', 'warning')
+            return render_template('register.html', form=form)
+
+        # Create new user
+        user = User(username=username, password=form.password.data, email=email)
+        db.session.add(user)
+        db.session.commit()
+
+        flash('You are now registered. Please login.', 'success')
+        return redirect(url_for('paldea_app.login'))
+
+    return render_template('register.html', form=form)</code></pre>
+
+                                    <h6>File: my_paldea/paldea_app/views.py (Login Route)</h6>
+                                    <p>This route handles user authentication, supporting both local database and OAuth login.</p>
+                                    <pre><code class="language-python">@paldea_app.route("/login", methods=["GET", "POST"])
+def login():
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+
+        # Try local DB login first
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            login_user(user)
+            session["user_id"] = user.id
+            flash("Logged in successfully!", "success")
+            return redirect(url_for("paldea_app.home"))
+        else:
+            flash("Invalid username or password", "danger")
+            return render_template("login.html", form=form)
+
+    return render_template("login.html", form=form)</code></pre>
+
+                                    <h6>File: my_paldea/paldea_app/models.py (User Model)</h6>
+                                    <p>The User model handles authentication, password hashing, and budget tracking.</p>
+                                    <pre><code class="language-python">class User(UserMixin,db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150),nullable=False, unique=True)
+    email = db.Column(db.String(150), nullable=False, unique=True)
+    pwdhash = db.Column(db.String(256), nullable=False)
+    budget = db.Column(db.Float, default=0.0)
+
+    def __init__(self, username, password, email):
+        self.username = username
+        if password:
+            self.pwdhash = generate_password_hash(password, method='pbkdf2:sha256')
+        else:
+            self.pwdhash = ''
+        self.email = email
+
+    def check_password(self, password):
+        return check_password_hash(self.pwdhash,password)</code></pre>
+
+                                    <h6>File: scripts/init_db.py (Database Initialization)</h6>
+                                    <p>This script creates database tables and populates default categories.</p>
+                                    <pre><code class="language-python">from my_paldea import db, create_app
+from my_paldea.paldea_app.models import Category
+
+app = create_app()
+
+with app.app_context():
+    db.create_all()
+
+    # Add default categories if they don't exist
+    default_categories = ['Groceries', 'Entertainment', 'Rent', 'Utilities', 'Transportation', 'Dining', 'Healthcare', 'Shopping', 'Salary', 'Freelance', 'Investments']
+    for cat_name in default_categories:
+        if not Category.query.filter_by(name=cat_name).first():
+            category = Category(name=cat_name)
+            db.session.add(category)
+    db.session.commit()
+
+print("Database initialized with tables and default categories.")</code></pre>
+                                    {% elif member == 'Qiao Huang' %}
+                                    <h6>File: my_paldea/paldea_app/views.py (Set Category Budget Route)</h6>
+                                    <p>This route allows users to set spending limits for different expense categories.</p>
+                                    <pre><code class="language-python">@paldea_app.route('/set_category_budget', methods=['POST'])
+@login_required
+def set_category_budget():
+    form = CategoryBudgetForm()
+    categories = Category.query.all()
+    form.category.choices = [(c.id, c.name) for c in categories]
+    if form.validate_on_submit():
+        # Check if budget already exists for this category and user
+        existing_budget = CategoryBudget.query.filter_by(user_id=current_user.id, category_id=form.category.data).first()
+        if existing_budget:
+            existing_budget.budget_amount = form.budget_amount.data
+        else:
+            budget = CategoryBudget(user_id=current_user.id, category_id=form.category.data, budget_amount=form.budget_amount.data)
+            db.session.add(budget)
+        db.session.commit()
+        flash('Category budget set successfully!', 'success')
+    return redirect(url_for('paldea_app.home'))</code></pre>
+
+                                    <h6>File: my_paldea/paldea_app/models.py (CategoryBudget Model)</h6>
+                                    <p>The CategoryBudget model stores user-defined spending limits for categories.</p>
+                                    <pre><code class="language-python">class CategoryBudget(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
+    budget_amount = db.Column(db.Float, nullable=False)
+    time_period = db.Column(db.String(20), default='monthly')
+
+    user = db.relationship('User', backref='category_budgets')
+    category = db.relationship('Category', backref='budgets')
+
+    def __repr__(self):
+        return f'<CategoryBudget {self.category.name}: ${self.budget_amount} ({self.time_period})>'</code></pre>
+
+                                    <h6>File: my_paldea/templates/home.html (Progress Bar UI)</h6>
+                                    <p>This template section displays visual progress bars showing budget usage with color coding.</p>
+                                    <pre><code class="language-html">{% raw %}{% for budget in category_budgets %}
+    {% set spent = category_spent.get(budget.category_id, 0) %}
+    {% set percentage = (spent / budget.budget_amount * 100) if budget.budget_amount > 0 else 0 %}
+    {% set progress_class = 'bg-success' if percentage < 70 else 'bg-warning' if percentage < 90 else 'bg-danger' %}
+    <div class="mb-3">
+        <h5>{{ budget.category.name }}</h5>
+        <div class="progress mb-2">
+            <div class="progress-bar {{ progress_class }}" role="progressbar" style="width: {{ percentage }}%" aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
-        {% endfor %}
+        <p class="mb-0">${{ "%.2f"|format(spent) }} of ${{ "%.2f"|format(budget.budget_amount) }} spent ({{ "%.1f"|format(percentage) }}%)</p>
+        {% if percentage > 100 %}
+            <div class="alert alert-danger mt-2">
+                <strong>Alert!</strong> You have exceeded your budget for {{ budget.category.name }}!
+            </div>
+        {% endif %}
     </div>
+{% endfor %}{% endraw %}</code></pre>
+                                    {% elif member == 'Rachan Sailamai' %}
+                                    <h6>File: my_paldea/paldea_app/views.py (Set Goal Route)</h6>
+                                    <p>This route handles setting financial goals for savings, investments, or loans.</p>
+                                    <pre><code class="language-python">@paldea_app.route('/set_goal', methods=['POST'])
+@login_required
+def set_goal():
+    form = GoalForm()
+    if form.validate_on_submit():
+        goal = Goal(user_id=current_user.id, goal_type=form.goal_type.data, target_amount=form.target_amount.data, deadline=form.deadline.data, description=form.description.data)
+        db.session.add(goal)
+        db.session.commit()
+        flash('Goal set successfully!', 'success')
+    return redirect(url_for('paldea_app.home'))</code></pre>
 
-    <div class="text-center mt-4">
-        <button class="btn btn-primary" onclick="toggleAll()">Toggle All Sections</button>
+                                    <h6>File: my_paldea/paldea_app/models.py (Goal Model)</h6>
+                                    <p>The Goal model tracks financial objectives with progress monitoring.</p>
+                                    <pre><code class="language-python">class Goal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    goal_type = db.Column(db.String(50), nullable=False)  # 'savings', 'investments', 'loans'
+    target_amount = db.Column(db.Float, nullable=False)
+    current_amount = db.Column(db.Float, default=0.0)
+    deadline = db.Column(db.Date, nullable=False)
+    description = db.Column(db.String(200))
+
+    def __repr__(self):
+        return f'<Goal {self.goal_type}: ${self.target_amount}>'</code></pre>
+
+                                    <h6>File: my_paldea/templates/home.html (Goal Progress Display)</h6>
+                                    <p>This template section shows goal progress with visual indicators and deadlines.</p>
+                                    <pre><code class="language-html">{% raw %}{% for goal in goals %}
+    {% set progress = ((goal.current_amount or 0) / goal.target_amount * 100) if goal.target_amount and goal.target_amount > 0 else 0 %}
+    <div class="mb-3">
+        <h5>{{ goal.goal_type.title() }} Goal</h5>
+        <p>{{ goal.description or 'No description' }}</p>
+        <div class="progress mb-2">
+            <div class="progress-bar bg-info" role="progressbar" style="width: {{ progress }}%" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <p class="mb-0">${{ "%.2f"|format(goal.current_amount or 0) }} of ${{ "%.2f"|format(goal.target_amount) }} ({{ "%.1f"|format(progress) }}%)</p>
+        <p class="text-muted">Deadline: {{ goal.deadline.strftime('%Y-%m-%d') }}</p>
     </div>
-</div>
+{% endfor %}{% endraw %}</code></pre>
 
-<script>
-function toggleAll() {
-    const collapses = document.querySelectorAll('.accordion-collapse');
-    const isExpanded = Array.from(collapses).some(collapse => collapse.classList.contains('show'));
-    collapses.forEach(collapse => {
-        if (isExpanded) {
-            collapse.classList.remove('show');
-        } else {
-            collapse.classList.add('show');
+                                    <h6>File: my_paldea/templates/home.html (Budget Alert Logic)</h6>
+                                    <p>This template logic checks for budget overspending and displays alerts.</p>
+                                    <pre><code class="language-html">{% raw %}{% if percentage > 100 %}
+    <div class="alert alert-danger mt-2">
+        <strong>Alert!</strong> You have exceeded your budget for {{ budget.category.name }}!
+    </div>
+{% endif %}{% endraw %}</code></pre>
+                                    {% elif member == 'Manish Shrivastav' %}
+                                    <h6>File: my_paldea/templates/home.html (Chart.js Integration)</h6>
+                                    <p>This template section integrates Chart.js for pie and bar chart visualizations.</p>
+                                    <pre><code class="language-html">{% raw %}<script>
+    // Pie Chart
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    const pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ pie_labels|tojson }},
+            datasets: [{
+                data: {{ pie_data|tojson }},
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+            }]
         }
     });
-}
-</script>
+
+    // Bar Chart
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    const barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ bar_labels|tojson }},
+            datasets: [{
+                data: {{ bar_data|tojson }},
+                backgroundColor: ['#36A2EB', '#FF6384']
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>{% endraw %}</code></pre>
+
+                                    <h6>File: my_paldea/paldea_app/views.py (Chart Data Preparation)</h6>
+                                    <p>This view logic prepares data for charts, calculating spending by category and monthly income/expense.</p>
+                                    <pre><code class="language-python"># Data for charts
+pie_labels = [cb.category.name for cb in category_budgets if cb.category]
+pie_data = [category_spent.get(cb.category_id, 0) for cb in category_budgets if cb.category]
+
+# Monthly income vs expense bar chart (current month)
+monthly_transactions = [t for t in transactions if t.date.month == now.month and t.date.year == now.year]
+income = sum(t.amount for t in monthly_transactions if t.type == 'income')
+expense = sum(t.amount for t in monthly_transactions if t.type == 'expense')
+bar_labels = ['Income', 'Expense']
+bar_data = [income, expense]</code></pre>
+
+                                    <h6>File: my_paldea/paldea_app/views.py (Filtering Logic)</h6>
+                                    <p>This view implements date-based filtering for transactions (week, month, year).</p>
+                                    <pre><code class="language-python"># Filter transactions based on query params
+filter_type = request.args.get('filter_type')
+filter_period = request.args.get('filter_period')
+now = datetime.utcnow()
+if filter_type:
+    transactions = [t for t in transactions if t.type == filter_type]
+if filter_period:
+    if filter_period == 'week':
+        start_date = now - timedelta(days=7)
+    elif filter_period == 'month':
+        start_date = datetime(now.year, now.month, 1)
+    elif filter_period == 'year':
+        start_date = datetime(now.year, 1, 1)
+    transactions = [t for t in transactions if t.date >= start_date]</code></pre>
+
+                                    <h6>File: my_paldea/templates/home.html (Filter UI)</h6>
+                                    <p>This template provides the user interface for filtering transactions by type and period.</p>
+                                    <pre><code class="language-html">{% raw %}<form method="GET" class="d-flex mb-3">
+    <select name="filter_type" class="form-select me-2">
+        <option value="">All Types</option>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+    </select>
+    <select name="filter_period" class="form-select me-2">
+        <option value="">All Time</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+        <option value="year">This Year</option>
+    </select>
+    <button type="submit" class="btn btn-primary">Filter</button>
+</form>{% endraw %}</code></pre>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}

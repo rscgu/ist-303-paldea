@@ -501,9 +501,9 @@ def demo():
         Transaction(description='Entertainment', amount=100.00, type='expense', category_id=4, user_id=1, date=now - timedelta(days=7)),
     ]
     sample_category_budgets = [
-        CategoryBudget(user_id=1, category_id=2, budget_amount=200.00),
-        CategoryBudget(user_id=1, category_id=3, budget_amount=1300.00),
-        CategoryBudget(user_id=1, category_id=4, budget_amount=150.00),
+        CategoryBudget(user_id=1, category_id=2, budget_amount=200.00, category=Category(id=2, name='Groceries')),
+        CategoryBudget(user_id=1, category_id=3, budget_amount=1300.00, category=Category(id=3, name='Rent')),
+        CategoryBudget(user_id=1, category_id=4, budget_amount=150.00, category=Category(id=4, name='Entertainment')),
     ]
     sample_goals = [
         Goal(user_id=1, goal_type='Savings', target_amount=5000.00, deadline=now + timedelta(days=365), description='Emergency fund'),
@@ -535,8 +535,8 @@ def demo():
         category_spent[budget.category_id] = spent
 
     # Data for charts
-    pie_labels = [cb.category.name for cb in category_budgets if cb.category and category_spent.get(cb.category_id, 0) > 0]
-    pie_data = [category_spent.get(cb.category_id, 0) for cb in category_budgets if cb.category and category_spent.get(cb.category_id, 0) > 0]
+    pie_labels = [cb.category.name for cb in category_budgets if cb.category]
+    pie_data = [category_spent.get(cb.category_id, 0) for cb in category_budgets if cb.category]
 
     monthly_transactions = [t for t in transactions if t.date.month == now.month and t.date.year == now.year]
     income = sum(t.amount for t in monthly_transactions if t.type == 'income')
