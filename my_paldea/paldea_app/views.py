@@ -433,16 +433,6 @@ def ldap_login():
 @paldea_app.route('/part-c')
 def part_c():
     team_members = {
-        'Samantha Aguirre': {
-            'epic': 'Epic 1.2: Core Transaction Management Continued',
-            'user_stories': '1, 6, 7',
-            'summary': 'These stories describe the need for a unified system where users can record and categorize both income and expense transactions without relying on multiple services.',
-            'tasks': [
-                'Task 5: Categorize transactions by income/expense type. (Supports Stories 6 & 7)',
-                'Task 6: Display transactions in a list view. (Supports Stories 6 & 7)',
-                'Task 7: Implement delete/edit transaction functionality. (Enhances Stories 6 & 7 usability)'
-            ]
-        },
         'Gerves Francois Baniakina': {
             'epic': 'Epic 1: Core Transaction Management',
             'user_stories': '1, 6, 7',
@@ -452,6 +442,16 @@ def part_c():
                 'Task 2: Create database schema (users, transactions, categories). (Foundation for Stories 6 & 7)',
                 'Task 3: Implement "Add income transaction" form. (Supports Story 6: income tracker)',
                 'Task 4: Implement "Add expense transaction" form. (Supports Story 7: expense tracker)'
+            ]
+        },
+        'Samantha Aguirre': {
+            'epic': 'Epic 1.2: Core Transaction Management Continued',
+            'user_stories': '1, 6, 7',
+            'summary': 'These stories describe the need for a unified system where users can record and categorize both income and expense transactions without relying on multiple services.',
+            'tasks': [
+                'Task 5: Categorize transactions by income/expense type. (Supports Stories 6 & 7)',
+                'Task 6: Display transactions in a list view. (Supports Stories 6 & 7)',
+                'Task 7: Implement delete/edit transaction functionality. (Enhances Stories 6 & 7 usability)'
             ]
         },
         'Qiao Huang': {
