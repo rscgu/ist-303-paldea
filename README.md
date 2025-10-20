@@ -184,38 +184,118 @@ Linked User Stories: 3, 4, 14
   # Budgeting & Alerts Module – Qiao Huang (Tasks 8 & 9)
 This submodule is part of the **Personal Finance Tracker** developed by Team Paldea for IST 303 Fall 2025.
 
-## Features Implemented
-### ✅ Task 8: Monthly Budget Entry
-- Users can enter a spending limit per category (e.g., rent, groceries).
-- Form captures:
-  - Category (text input)
-  - Amount (positive number only)
-- Data is handled in Flask and displayed back to users with confirmation.
-- Stored in `budget.html` template and Flask backend in `routes.py`.
+Personal Finance Tracker – Budgeting & Progress (Tasks 8 & 9)
 
-### ✅ Task 9: Progress Bar Display
-- Compares actual spending (transaction total) against budgeted amount.
-- Color-coded visual progress bar:
-  - Green: under 70%
-  - Yellow: 70%–90%
-  - Red: over 90%
-- Displays:
-  - `$X of $Y spent`
-  - `$Z remaining`
+IST 303 – Fall 2025
+Developed by: Qiao Huang (Team Paldea)
 
-## Code Structure
-| File | Purpose |
-|------|---------|
-| `app/routes.py` | Defines `/budget` route |
-| `templates/budget.html` | HTML form for entering budgets |
-| `run.py` | App entry point |
-| `requirements.txt` | Required Python packages (`Flask`, `pytest`) |
-| `tests/test_budget.py` | Basic test file setup |
+⸻
 
-## How to Run
-```bash
+📌 Project Overview
+
+This is a Flask-based web app that fulfills:
+	•	✅ Task 8 – Budget Input Feature
+	•	✅ Task 9 – Budget Progress Visualization
+
+The app allows users to:
+	•	Set monthly budgets by category
+	•	Automatically track transaction totals
+	•	View a visual progress bar (color-coded) showing how much of the budget has been spent
+
+⸻
+
+🚀 Features
+
+✅ Task 8: Monthly Budget Form
+	•	Users enter a category and budget amount.
+	•	Entries are saved to a SQLite database (budgets table).
+
+✅ Task 9: Budget Progress Bar
+	•	Simulated transaction data (in transactions table).
+	•	Displays spending per category.
+	•	Progress bar colors:
+	•	Green = under 70%
+	•	Yellow = 70–90%
+	•	Red = over 90%
+
+⸻
+
+🧱 Tech Stack
+	•	Python 3.8+
+	•	Flask 2.3.2
+	•	SQLite (local database)
+	•	Bootstrap 5 (for progress bar styling)
+
+⸻
+
+📁 File Structure
+
+final_task_8_9_complete/
+├── app/
+│   ├── __init__.py           # Flask app setup
+│   ├── routes.py            # App logic & routing
+│   └── templates/
+│       ├── budget.html      # Budget entry form
+│       └── summary.html     # Progress bar view
+├── run.py                   # App entry point
+├── requirements.txt         # Flask dependency
+├── README.md                # Project documentation (this file)
+
+
+⸻
+
+🧪 How to Run the Application (Detailed Steps)
+
+📥 Step 1: Download and unzip
+	•	Download the ZIP file: final_task_8_9_complete.zip
+	•	Unzip it to a location you can find, like your Desktop or Downloads folder
+
+🧭 Step 2: Open Terminal and navigate to the project folder
+
+cd ~/Downloads/final_task_8_9_complete  # Or wherever you unzipped it
+
+🛠️ Step 3: Set up your virtual environment
+
+python3 -m venv venv
+source venv/bin/activate
+
+You should now see (venv) at the start of your terminal prompt
+
+📦 Step 4: Install the required packages
+
 pip install -r requirements.txt
+
+This installs Flask so the app can run
+
+🚀 Step 5: Start the app
+
 python run.py
+
+You should see:
+
+ * Running on http://127.0.0.1:5000/
+
+🌐 Step 6: Open the app in your browser
+	•	Go to: http://127.0.0.1:5000/budget → to add budgets
+	•	Go to: http://127.0.0.1:5000/summary → to view progress bar
+
+⸻
+
+🧠 Lessons Learned
+	•	How to use Flask with SQLite for local data persistence
+	•	How to structure routes and templates for dynamic views
+	•	How to visualize data with Bootstrap progress bars
+
+⸻
+
+📌 Author Contribution
+
+This version was developed specifically to fulfill Tasks 8 and 9 of the IST 303 course:
+	•	All Flask routes, HTML templates, and progress logic implemented by: Qiao Huang
+
+
+
+
 
 ### Epic 2.2: Budgeting & Alerts Continued
 (Allocated to Rachan)
