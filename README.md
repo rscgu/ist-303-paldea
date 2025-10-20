@@ -5,9 +5,41 @@ This is the link to the document of the finalized Part B of the Project!
 
 https://cgu0-my.sharepoint.com/:w:/g/personal/samantha_aguirre_cgu_edu/EXA-6QFoh3BLvEFpddSW5XwBFshm1WCBbWBdSq8VvvE4rg?e=hvxJUL
 
-Run the command 
+## Installation and Setup
 
-python run.py to test the pogram.
+### Prerequisites
+- Python 3.8 or higher
+- pip (Python package installer)
+
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/rscgu/ist-303-paldea.git
+   cd ist-303-paldea
+   ```
+
+2. Install dependencies using pip:
+   ```bash
+   pip install -r requirements.txt
+   ```
+   Or install using setup.py:
+   ```bash
+   pip install -e .
+   ```
+
+3. Run the application:
+   ```bash
+   python run.py
+   ```
+
+4. Open your browser and navigate to `http://127.0.0.1:5000` to access the Personal Finance Tracker.
+
+### Features
+- User authentication (login/register)
+- Transaction management (income and expenses)
+- Budgeting and financial goals
+- Financial dashboards and visualizations
+- Category-based expense tracking
 
 Date:September 24, 2025 at 6:30PM
 Participannts: Samantha Aguirre, Manish Ranjan Shrivastav, Gerves Francois Baniakina
