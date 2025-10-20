@@ -181,6 +181,41 @@ Linked User Stories: 3, 4, 14
   Text showing "$Z remaining"
   Color coding: green (under 70%), yellow (70-90%), red (over 90%)
   Summary: These stories address monthly and annual financial planning, user-defined savings goals, and system alerts when overspending.
+  # Budgeting & Alerts Module – Qiao Huang (Tasks 8 & 9)
+This submodule is part of the **Personal Finance Tracker** developed by Team Paldea for IST 303 Fall 2025.
+
+## Features Implemented
+### ✅ Task 8: Monthly Budget Entry
+- Users can enter a spending limit per category (e.g., rent, groceries).
+- Form captures:
+  - Category (text input)
+  - Amount (positive number only)
+- Data is handled in Flask and displayed back to users with confirmation.
+- Stored in `budget.html` template and Flask backend in `routes.py`.
+
+### ✅ Task 9: Progress Bar Display
+- Compares actual spending (transaction total) against budgeted amount.
+- Color-coded visual progress bar:
+  - Green: under 70%
+  - Yellow: 70%–90%
+  - Red: over 90%
+- Displays:
+  - `$X of $Y spent`
+  - `$Z remaining`
+
+## Code Structure
+| File | Purpose |
+|------|---------|
+| `app/routes.py` | Defines `/budget` route |
+| `templates/budget.html` | HTML form for entering budgets |
+| `run.py` | App entry point |
+| `requirements.txt` | Required Python packages (`Flask`, `pytest`) |
+| `tests/test_budget.py` | Basic test file setup |
+
+## How to Run
+```bash
+pip install -r requirements.txt
+python run.py
 
 ### Epic 2.2: Budgeting & Alerts Continued
 (Allocated to Rachan)
