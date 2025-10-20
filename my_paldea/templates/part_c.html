@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block container %}
+{% set print_mode = request.args.get('print') %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <div class="container mt-5">
@@ -289,11 +290,11 @@
         {% for member, details in team_members.items() %}
         <div class="accordion-item">
             <h2 class="accordion-header" id="heading{{ loop.index }}">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+                <button class="accordion-button{% if not print_mode %} collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="{{ 'true' if print_mode else 'false' }}" aria-controls="collapse{{ loop.index }}">
                     <strong>{{ member }}</strong> - {{ details.epic }}
                 </button>
             </h2>
-            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#teamAccordion">
+            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse{% if print_mode %} show{% endif %}" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#teamAccordion">
                 <div class="accordion-body">
                     <h5>Linked User Stories: {{ details.user_stories }}</h5>
                     <p><em>{{ details.summary }}</em></p>
@@ -331,11 +332,11 @@
                     <div class="accordion mt-3" id="codeAccordion{{ loop.index }}">
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="codeHeading{{ loop.index }}">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#codeCollapse{{ loop.index }}" aria-expanded="false" aria-controls="codeCollapse{{ loop.index }}">
+                                <button class="accordion-button{% if not print_mode %} collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#codeCollapse{{ loop.index }}" aria-expanded="{{ 'true' if print_mode else 'false' }}" aria-controls="codeCollapse{{ loop.index }}">
                                     Code Snippets and Explanations
                                 </button>
                             </h2>
-                            <div id="codeCollapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="codeHeading{{ loop.index }}" data-bs-parent="#codeAccordion{{ loop.index }}">
+                            <div id="codeCollapse{{ loop.index }}" class="accordion-collapse collapse{% if print_mode %} show{% endif %}" aria-labelledby="codeHeading{{ loop.index }}" data-bs-parent="#codeAccordion{{ loop.index }}">
                                 <div class="accordion-body">
                                     {% if member == 'Samantha Aguirre' %}
                                     <h6>File: my_paldea/paldea_app/views.py (Add Transaction Route)</h6>

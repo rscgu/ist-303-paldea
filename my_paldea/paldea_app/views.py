@@ -1,7 +1,12 @@
 ''' To handle the user requests for registration and login'''
 import ldap3
 import flask_dance
-from flask import g,Blueprint, render_template,request,flash,redirect, url_for, session, jsonify
+from flask import g,Blueprint, render_template,request,flash,redirect, url_for, session, jsonify, Response
+import asyncio
+import os
+import subprocess
+import tempfile
+import shutil
 from flask_login import current_user, login_user, logout_user, login_required
 from my_paldea import db,login_manager,bcrypt
 from my_paldea.utlities import get_ldap_connection
@@ -486,6 +491,54 @@ def part_c():
         }
     }
     return render_template('part_c.html', team_members=team_members)
+
+@paldea_app.route('/part-c.pdf')
+def part_c_pdf():
+    # Use installed Edge/Chrome in headless mode to print the live page to PDF, with all accordions expanded.
+    target_url = url_for('paldea_app.part_c', _external=True) + '?print=1'
+
+    # Find Edge or Chrome executable
+    candidates = [
+        shutil.which('msedge'),
+        shutil.which('chrome'),
+        shutil.which('google-chrome'),
+        r'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+        r'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+        r'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        r'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+    ]
+    browser_path = next((p for p in candidates if p and os.path.exists(p)), None)
+    if not browser_path:
+        return Response(b'Browser not found. Please install Microsoft Edge or Google Chrome.', status=500)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_pdf = os.path.join(tmpdir, 'part-c.pdf')
+        user_data_dir = os.path.join(tmpdir, 'ud')
+        os.makedirs(user_data_dir, exist_ok=True)
+        # Headless print to PDF. virtual-time-budget helps JS-heavy pages finish rendering.
+        cmd = [
+            browser_path,
+            '--headless=new',
+            f'--user-data-dir={user_data_dir}',
+            f'--print-to-pdf={output_pdf}',
+            '--print-to-pdf-no-header',
+            '--disable-gpu',
+            '--no-sandbox',
+            '--disable-dev-shm-usage',
+            '--run-all-compositor-stages-before-draw',
+            '--virtual-time-budget=10000',
+            target_url
+        ]
+        try:
+            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+            with open(output_pdf, 'rb') as f:
+                pdf_bytes = f.read()
+        except subprocess.TimeoutExpired:
+            return Response(b'PDF generation timed out.', status=504)
+        except subprocess.CalledProcessError as e:
+            return Response(f'PDF generation failed: {e.stderr.decode(errors="ignore")}'.encode(), status=500)
+
+    return Response(pdf_bytes, mimetype='application/pdf', headers={'Content-Disposition': 'attachment; filename=part-c.pdf'})
 
 @paldea_app.route('/demo')
 def demo():
