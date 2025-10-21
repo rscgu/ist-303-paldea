@@ -10,10 +10,10 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('home') }}">💰 Personal Finance Tracker</a>
+            <a class="navbar-brand" href="{{ url_for('paldea_app.home') }}">💰 Personal Finance Tracker</a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{{ url_for('budget_form') }}">Set Budget</a>
-                <a class="nav-link" href="{{ url_for('add_sample_data') }}">Add Sample Data</a>
+                <a class="nav-link" href="{{ url_for('paldea_app.budget_form') }}">Set Budget</a>
+                <a class="nav-link" href="{{ url_for('paldea_app.add_sample_data') }}">Add Sample Data</a>
             </div>
         </div>
     </nav>
@@ -24,8 +24,8 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>📊 Budget Progress</h2>
                     <div>
-                        <a href="{{ url_for('budget_form') }}" class="btn btn-primary me-2">Set New Budget</a>
-                        <a href="{{ url_for('add_sample_data') }}" class="btn btn-outline-secondary">Add Sample Data</a>
+                        <a href="{{ url_for('paldea_app.budget_form') }}" class="btn btn-primary me-2">Set New Budget</a>
+                        <a href="{{ url_for('paldea_app.add_sample_data') }}" class="btn btn-outline-secondary">Add Sample Data</a>
                     </div>
                 </div>
 
@@ -143,7 +143,7 @@
                         </div>
                         <h4 class="text-muted">No budgets set yet</h4>
                         <p class="text-muted">Start by setting up your monthly budgets to track your spending progress.</p>
-                        <a href="{{ url_for('budget_form') }}" class="btn btn-primary">Set Your First Budget</a>
+                        <a href="{{ url_for('paldea_app.budget_form') }}" class="btn btn-primary">Set Your First Budget</a>
                     </div>
                 {% endif %}
             </div>

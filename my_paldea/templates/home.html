@@ -10,7 +10,7 @@
         <h1 class="mb-4">Welcome to Paldea App</h1>
         <h2 class="mb-4">Personal Financial Budget Planning</h2>
         <a href="{{ url_for('paldea_app.part_c') }}" class="btn btn-secondary">View Part C Presentation</a>
-        <a href="{{ url_for('budget_form') }}" class="btn btn-primary ml-2">Budget Management</a>
+        <a href="{{ url_for('paldea_app.budget_form') }}" class="btn btn-primary ml-2">Budget Management</a>
     </div>
 
     {% if demo or current_user.is_authenticated %}

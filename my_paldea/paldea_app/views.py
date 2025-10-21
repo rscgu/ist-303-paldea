@@ -147,6 +147,29 @@ def home():
         spent = sum(t.amount for t in transactions if t.category_id == budget.category_id and t.type == 'expense' and t.date >= current_month_start)
         category_spent[budget.category_id] = spent
 
+    # Calculate budget progress for display
+    budget_progress = []
+    for budget in category_budgets:
+        spent = category_spent.get(budget.category_id, 0)
+        percentage = (spent / budget.budget_amount) * 100 if budget.budget_amount > 0 else 0
+
+        # Determine color based on percentage
+        if percentage < 70:
+            color = 'success'
+        elif percentage < 90:
+            color = 'warning'
+        else:
+            color = 'danger'
+
+        budget_progress.append({
+            'category': budget.category.name,
+            'budget_amount': budget.budget_amount,
+            'spent': spent,
+            'remaining': budget.budget_amount - spent,
+            'percentage': min(percentage, 100),
+            'color': color
+        })
+
     # Data for charts
     pie_labels = [cb.category.name for cb in category_budgets if cb.category]
     pie_data = [category_spent.get(cb.category_id, 0) for cb in category_budgets if cb.category]
@@ -163,7 +186,7 @@ def home():
     total_expenses = sum(t.amount for t in transactions if t.type == 'expense')
     cash_flow = total_income - total_expenses
 
-    return render_template('home.html', budget_form=budget_form, transaction_form=transaction_form, category_budget_form=category_budget_form, goal_form=goal_form, transactions=transactions, categories=categories, category_budgets=category_budgets, goals=goals, category_spent=category_spent, now=now, pie_labels=pie_labels, pie_data=pie_data, bar_labels=bar_labels, bar_data=bar_data, total_income=total_income, total_expenses=total_expenses, cash_flow=cash_flow)
+    return render_template('home.html', budget_form=budget_form, transaction_form=transaction_form, category_budget_form=category_budget_form, goal_form=goal_form, transactions=transactions, categories=categories, category_budgets=category_budgets, goals=goals, category_spent=category_spent, budget_progress=budget_progress, now=now, pie_labels=pie_labels, pie_data=pie_data, bar_labels=bar_labels, bar_data=bar_data, total_income=total_income, total_expenses=total_expenses, cash_flow=cash_flow)
 
 @paldea_app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -539,6 +562,116 @@ def part_c_pdf():
             return Response(f'PDF generation failed: {e.stderr.decode(errors="ignore")}'.encode(), status=500)
 
     return Response(pdf_bytes, mimetype='application/pdf', headers={'Content-Disposition': 'attachment; filename=part-c.pdf'})
+
+@paldea_app.route('/budget')
+@login_required
+def budget_form():
+    """Display budget setting form"""
+    return render_template('budget.html')
+
+@paldea_app.route('/add_budget', methods=['POST'])
+@login_required
+def add_budget():
+    """Add a new budget entry"""
+    try:
+        category_name = request.form['category']
+        budget_amount = float(request.form['budget_amount'])
+
+        # Get or create category
+        category = Category.query.filter_by(name=category_name).first()
+        if not category:
+            category = Category(name=category_name)
+            db.session.add(category)
+            db.session.commit()
+
+        # Check if budget exists, update or create
+        existing_budget = CategoryBudget.query.filter_by(user_id=current_user.id, category_id=category.id).first()
+        if existing_budget:
+            existing_budget.budget_amount = budget_amount
+        else:
+            budget = CategoryBudget(user_id=current_user.id, category_id=category.id, budget_amount=budget_amount)
+            db.session.add(budget)
+        db.session.commit()
+
+        flash('Budget added successfully!', 'success')
+        return redirect(url_for('paldea_app.budget_progress'))
+    except Exception as e:
+        flash(f'Error adding budget: {str(e)}', 'error')
+        return redirect(url_for('paldea_app.budget_form'))
+
+@paldea_app.route('/budget_progress')
+@login_required
+def budget_progress():
+    """Display budget progress with progress bars"""
+    from datetime import datetime
+
+    # Get all budgets for user
+    budgets = CategoryBudget.query.filter_by(user_id=current_user.id).all()
+
+    # Get current month's transactions
+    now = datetime.utcnow()
+    current_month_start = datetime(now.year, now.month, 1)
+    transactions = Transaction.query.filter(
+        Transaction.user_id == current_user.id,
+        Transaction.type == 'expense',
+        Transaction.date >= current_month_start
+    ).all()
+
+    # Create spending dictionary
+    spending = {}
+    for transaction in transactions:
+        if transaction.category_id:
+            spending[transaction.category_id] = spending.get(transaction.category_id, 0) + transaction.amount
+
+    # Calculate progress for each budget
+    budget_progress = []
+    for budget in budgets:
+        spent = spending.get(budget.category_id, 0)
+        percentage = (spent / budget.budget_amount) * 100 if budget.budget_amount > 0 else 0
+
+        # Determine color based on percentage
+        if percentage < 70:
+            color = 'success'
+        elif percentage < 90:
+            color = 'warning'
+        else:
+            color = 'danger'
+
+        budget_progress.append({
+            'category': budget.category.name,
+            'budget_amount': budget.budget_amount,
+            'spent': spent,
+            'remaining': budget.budget_amount - spent,
+            'percentage': min(percentage, 100),
+            'color': color
+        })
+
+    return render_template('budget_progress.html', budgets=budget_progress)
+
+@paldea_app.route('/add_sample_data')
+@login_required
+def add_sample_data():
+    """Add sample transaction data for demonstration"""
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+
+    # Sample transactions for current month
+    sample_transactions = [
+        Transaction(description='Weekly grocery shopping', amount=150.00, type='expense', category_id=2, user_id=current_user.id, date=now - timedelta(days=5)),
+        Transaction(description='Movie tickets', amount=75.50, type='expense', category_id=4, user_id=current_user.id, date=now - timedelta(days=3)),
+        Transaction(description='Monthly rent payment', amount=200.00, type='expense', category_id=3, user_id=current_user.id, date=now - timedelta(days=1)),
+        Transaction(description='Gas and parking', amount=45.00, type='expense', category_id=5, user_id=current_user.id, date=now - timedelta(days=10)),
+        Transaction(description='Monthly salary', amount=3000.00, type='income', category_id=1, user_id=current_user.id, date=now - timedelta(days=7)),
+        Transaction(description='Additional groceries', amount=120.00, type='expense', category_id=2, user_id=current_user.id, date=now - timedelta(days=2)),
+        Transaction(description='Dining out', amount=50.00, type='expense', category_id=4, user_id=current_user.id, date=now - timedelta(days=4)),
+    ]
+
+    for transaction in sample_transactions:
+        db.session.add(transaction)
+    db.session.commit()
+
+    flash('Sample data added successfully!', 'success')
+    return redirect(url_for('paldea_app.budget_progress'))
 
 @paldea_app.route('/demo')
 def demo():

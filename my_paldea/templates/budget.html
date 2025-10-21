@@ -10,10 +10,10 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('home') }}">💰 Personal Finance Tracker</a>
+            <a class="navbar-brand" href="{{ url_for('paldea_app.home') }}">💰 Personal Finance Tracker</a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{{ url_for('budget_progress') }}">Budget Progress</a>
-                <a class="nav-link" href="{{ url_for('add_sample_data') }}">Add Sample Data</a>
+                <a class="nav-link" href="{{ url_for('paldea_app.budget_progress') }}">Budget Progress</a>
+                <a class="nav-link" href="{{ url_for('paldea_app.add_sample_data') }}">Add Sample Data</a>
             </div>
         </div>
     </nav>
@@ -38,7 +38,7 @@
                             {% endif %}
                         {% endwith %}
 
-                        <form method="POST" action="{{ url_for('add_budget') }}">
+                        <form method="POST" action="{{ url_for('paldea_app.add_budget') }}">
                             <div class="mb-3">
                                 <label for="category" class="form-label">Category</label>
                                 <select class="form-select" id="category" name="category" required>
@@ -73,7 +73,7 @@
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <a href="{{ url_for('budget_progress') }}" class="btn btn-outline-secondary me-md-2">View Progress</a>
+                                <a href="{{ url_for('paldea_app.budget_progress') }}" class="btn btn-outline-secondary me-md-2">View Progress</a>
                                 <button type="submit" class="btn btn-primary">Save Budget</button>
                             </div>
                         </form>
