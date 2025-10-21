@@ -3,10 +3,14 @@ from datetime import datetime, timedelta
 import sqlite3
 import os
 
-app = Flask(__name__, 
+app = Flask(__name__,
             template_folder='my_paldea/templates',
             static_folder='my_paldea/static')
 app.secret_key = 'your-secret-key-here'
+
+# Register the paldea_app blueprint
+from my_paldea.paldea_app.views import paldea_app
+app.register_blueprint(paldea_app)
 
 # Database setup
 def get_db_connection():
