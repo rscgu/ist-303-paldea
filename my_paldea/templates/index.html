@@ -3,43 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Financial Budget Planning</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Personal Finance Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="#">Budget Planner</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Register</a>
-                    </li>
-                </ul>
+            <a class="navbar-brand" href="{{ url_for('home') }}">💰 Personal Finance Tracker</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('budget_form') }}">Set Budget</a>
+                <a class="nav-link" href="{{ url_for('budget_progress') }}">Budget Progress</a>
+                <a class="nav-link" href="{{ url_for('add_sample_data') }}">Add Sample Data</a>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-5 text-center">
-        <h1 class="display-4">Hello {{ user }}!</h1>
-        <p class="lead">Welcome to the World of Flask!</p>
-        <p class="mt-4">
-            Start planning your personal finances today and take control of your budget.
-        </p>
-        <a href="{{ url_for('paldea_app.register') }}" class="btn btn-primary btn-lg mt-3">Get Started</a>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-5">
+                    <h1 class="display-4 fw-bold text-primary">💰 Personal Finance Tracker</h1>
+                    <p class="lead text-muted">Take control of your finances with smart budgeting and expense tracking</p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-chart-line fa-3x text-primary"></i>
+                                </div>
+                                <h5 class="card-title">Set Budgets</h5>
+                                <p class="card-text">Create monthly spending limits for different categories and track your progress.</p>
+                                <a href="{{ url_for('budget_form') }}" class="btn btn-primary">Set Budget</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-chart-pie fa-3x text-success"></i>
+                                </div>
+                                <h5 class="card-title">View Progress</h5>
+                                <p class="card-text">See visual progress bars showing how much you've spent vs. your budget.</p>
+                                <a href="{{ url_for('budget_progress') }}" class="btn btn-success">View Progress</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-database fa-3x text-info"></i>
+                                </div>
+                                <h5 class="card-title">Sample Data</h5>
+                                <p class="card-text">Add sample transactions to see the budget tracking in action.</p>
+                                <a href="{{ url_for('add_sample_data') }}" class="btn btn-info">Add Sample Data</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-info-circle fa-3x text-warning"></i>
+                                </div>
+                                <h5 class="card-title">Features</h5>
+                                <p class="card-text">Budget tracking, progress visualization, and expense categorization.</p>
+                                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#featuresModal">Learn More</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-5">
+                    <div class="card-header">
+                        <h5 class="mb-0">🚀 Getting Started</h5>
+                    </div>
+                    <div class="card-body">
+                        <ol class="mb-0">
+                            <li><strong>Set your budgets:</strong> Click "Set Budget" to define spending limits for different categories</li>
+                            <li><strong>Add sample data:</strong> Click "Add Sample Data" to populate the system with example transactions</li>
+                            <li><strong>View progress:</strong> Click "View Progress" to see visual progress bars for each budget category</li>
+                            <li><strong>Track spending:</strong> Monitor your progress throughout the month to stay within budget</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Bootstrap JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Features Modal -->
+    <div class="modal fade" id="featuresModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">🎯 Features Overview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>📊 Budget Management</h6>
+                            <ul>
+                                <li>Set monthly spending limits</li>
+                                <li>Category-based organization</li>
+                                <li>Real-time budget tracking</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>📈 Progress Visualization</h6>
+                            <ul>
+                                <li>Color-coded progress bars</li>
+                                <li>Spending percentage display</li>
+                                <li>Budget alerts and warnings</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>💾 Data Management</h6>
+                            <ul>
+                                <li>SQLite database storage</li>
+                                <li>Transaction categorization</li>
+                                <li>Sample data for testing</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>🎨 User Experience</h6>
+                            <ul>
+                                <li>Bootstrap 5 responsive design</li>
+                                <li>Intuitive navigation</li>
+                                <li>Mobile-friendly interface</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
 </body>
 </html>

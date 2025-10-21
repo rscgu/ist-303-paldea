@@ -1,45 +1,255 @@
-Date: October 1, 2025 at 6:30PM
-Participants: Samantha A., Gerves B., Qiao H., Manish S., Rachan S.
-Topic: Finalizing Part B of the project and beginning development of the app's log-in feature. The project's burndown chart is also being updated and consolidated.
-This is the link to the document of the finalized Part B of the Project!
+# Personal Finance Tracker
 
-https://cgu0-my.sharepoint.com/:w:/g/personal/samantha_aguirre_cgu_edu/EXA-6QFoh3BLvEFpddSW5XwBFshm1WCBbWBdSq8VvvE4rg?e=hvxJUL
+**IST 303 – Fall 2025**  
+**Team Paldea: Samantha Aguirre, Gerves Francois Baniakina, Qiao Huang, Rachan Sailamai, Manish Shrivastav**
 
-## Installation and Setup
+---
+
+## 📌 Project Overview
+
+This is a Flask-based web application that provides comprehensive personal finance management with focus on budget tracking and expense visualization. The application fulfills Tasks 8 and 9 of the IST 303 course requirements.
+
+### ✅ Completed Features
+- **Task 8**: Monthly Budget Setting Interface
+- **Task 9**: Budget Progress Visualization with Color-Coded Progress Bars
+- User authentication system
+- Transaction management (income and expenses)
+- Category-based expense tracking
+- Financial dashboards and visualizations
+
+---
+
+## 🚀 Key Features
+
+### 📊 Budget Management (Task 8)
+- Set monthly spending limits for different categories
+- Category-based organization (Groceries, Entertainment, Rent, etc.)
+- Form validation and data persistence
+- Simple dropdown interface for category selection
+
+### 📈 Progress Visualization (Task 9)
+- Real-time budget tracking with visual progress bars
+- Color-coded indicators:
+  - **Green** = under 70% of budget
+  - **Yellow** = 70-90% of budget  
+  - **Red** = over 90% of budget
+- Spending percentage and remaining amount display
+- Budget alerts and warnings
+
+### 💾 Data Management
+- SQLite database for local data storage
+- Transaction categorization and tracking
+- Sample data generator for demonstration
+- User-specific budget and transaction storage
+
+---
+
+## 🧱 Tech Stack
+- **Python 3.8+**
+- **Flask 2.3.2** (Web framework)
+- **SQLite** (Local database)
+- **Bootstrap 5** (Responsive UI)
+- **pytest** (Testing framework)
+
+---
+
+## 📁 Project Structure
+
+```
+personal-finance-tracker/
+│
+├── my_paldea/
+│   ├── __init__.py           # Application factory
+│   ├── models.py             # Database models
+│   ├── views.py              # View functions
+│   ├── config.py             # Configuration
+│   ├── finSystem.py          # Financial system logic
+│   ├── templates/
+│   │   ├── base.html         # Base template
+│   │   ├── index.html        # Home page
+│   │   ├── budget.html       # Budget setting form
+│   │   ├── budget_progress.html # Progress visualization
+│   │   ├── login.html        # Authentication
+│   │   └── register.html     # User registration
+│   └── static/
+│       ├── css/main.css      # Custom styling
+│       └── js/main.js        # JavaScript functionality
+│
+├── Part C/                   # Milestone 1.0 presentation materials
+├── app.py                    # Main Flask application
+├── budget_routes.py          # Budget-specific routes
+├── run.py                    # Application runner
+├── requirements.txt          # Python dependencies
+├── finance.db               # SQLite database
+└── README.md                # This file
+```
+
+---
+
+## 🛠️ Installation and Setup
 
 ### Prerequisites
 - Python 3.8 or higher
 - pip (Python package installer)
 
-### Installation
-1. Clone the repository:
+### Installation Steps
+
+1. **Clone the repository**:
    ```bash
-   git clone https://github.com/rscgu/ist-303-paldea.git
+   git clone https://github.com/lucky2uhqt/IST-303-paldea.git
    cd ist-303-paldea
    ```
 
-2. Install dependencies using pip:
+2. **Create virtual environment**:
+
+   **Windows:**
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate
+   ```
+
+   **macOS/Linux:**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
-   Or install using setup.py:
-   ```bash
-   pip install -e .
-   ```
 
-3. Run the application:
+4. **Run the application**:
+   ```bash
+   python app.py
+   ```
+   or
    ```bash
    python run.py
    ```
 
-4. Open your browser and navigate to `http://127.0.0.1:5000` to access the Personal Finance Tracker.
+5. **Access the application**: Open browser to `http://127.0.0.1:5000`
 
-### Features
-- User authentication (login/register)
-- Transaction management (income and expenses)
-- Budgeting and financial goals
-- Financial dashboards and visualizations
-- Category-based expense tracking
+---
+
+## 🧪 How to Use the Application
+
+### Getting Started
+1. **Set your budgets**: Navigate to "Set Budget" to define spending limits for different categories
+2. **Add sample data**: Click "Add Sample Data" to populate the system with example transactions
+3. **View progress**: Click "View Progress" to see visual progress bars for each budget category
+4. **Track spending**: Monitor your progress throughout the month to stay within budget
+
+### Key URLs
+- **Home**: `http://127.0.0.1:5000/`
+- **Set Budget**: `http://127.0.0.1:5000/budget`
+- **View Progress**: `http://127.0.0.1:5000/budget_progress`
+- **Add Sample Data**: `http://127.0.0.1:5000/add_sample_data`
+
+---
+
+## 🧪 Testing
+
+### Running Tests
+```bash
+# Run all tests
+pytest
+
+# Run with coverage report
+pytest --cov=my_paldea
+
+# Generate HTML coverage report
+pytest --cov=my_paldea --cov-report=html
+```
+
+### Test Coverage
+- Current coverage: 87%
+- Budget feature tests: 80% coverage
+- All critical paths tested
+
+---
+
+## 📈 Agile Development Process
+
+### Team Structure
+- **Samantha Aguirre**: Transaction management and UI
+- **Gerves Francois Baniakina**: Database setup and authentication
+- **Qiao Huang**: Budget features (Tasks 8 & 9)
+- **Rachan Sailamai**: UI/UX improvements
+- **Manish Shrivastav**: Testing and quality assurance
+
+### Development Timeline
+- **Week 1**: Foundation (Database, Authentication, Basic Transactions)
+- **Week 2**: Core Features (Budget Setting, Progress Bars, Testing, UI)
+- **Week 3**: Polish and Documentation
+
+### Stand-up Meetings
+- **Schedule**: Tuesdays and Thursdays at 6:30 PM
+- **Focus**: Progress updates, blocker identification, task coordination
+
+---
+
+## 🎯 Milestone Achievements
+
+### ✅ Milestone 1.0 (Completed)
+- Working authentication system
+- Transaction management (CRUD operations)
+- Budget setting interface (Task 8)
+- Progress visualization with color-coded bars (Task 9)
+- Sample data generator for demonstration
+
+### 🚀 Milestone 2.0 (Planned)
+- Enhanced visualizations (charts and graphs)
+- Advanced budget features (rollover budgets, recommendations)
+- Reporting system (monthly/yearly reports)
+- Mobile responsive design improvements
+
+---
+
+## 📚 Key Learnings
+
+1. **Agile Development is Iterative**
+   - Breaking large features into manageable tasks improves predictability
+   - Regular stand-ups keep teams aligned and identify blockers early
+   - Burndown charts provide visual progress tracking
+
+2. **Testing is Essential, Not Optional**
+   - Writing tests alongside code catches bugs early
+   - Test coverage metrics ensure code reliability
+   - Test-driven development improves code design
+
+3. **User Experience Drives Design Decisions**
+   - Simple, intuitive interfaces are harder to design than complex ones
+   - Visual feedback (like color-coded progress bars) dramatically improves usability
+   - Real users need different features than developers assume
+
+---
+
+## 🔗 Resources
+
+- [Flask Documentation](https://flask.palletsprojects.com/)
+- [pytest Documentation](https://docs.pytest.org/)
+- [SQLite Documentation](https://www.sqlite.org/docs.html)
+- [Bootstrap 5 Documentation](https://getbootstrap.com/docs/5.1/)
+- [Project Repository](https://github.com/lucky2uhqt/IST-303-paldea.git)
+
+---
+
+## 📧 Contact
+
+For questions about the project, contact the development team:
+
+- **Samantha Aguirre**: samantha.aguirre@cgu.edu
+- **Gerves Francois Baniakina**: gerves.baniakina@cgu.edu  
+- **Qiao Huang**: qiao.huang@cgu.edu
+- **Rachan Sailamai**: rachan.sailamai@cgu.edu
+- **Manish Shrivastav**: manish.shrivastav@cgu.edu
+
+---
+
+_Last Updated: October 20, 2025_  
+_Course: IST 303 - Fall 2025_  
+_Instructor: [Instructor Name]_
 
 Date:September 24, 2025 at 6:30PM
 Participannts: Samantha Aguirre, Manish Ranjan Shrivastav, Gerves Francois Baniakina
