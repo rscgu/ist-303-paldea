@@ -274,10 +274,10 @@ Students, Professionals, families managing budgets o Privacyconscious users who
 • UI and UX Designers 
 • Data Analysts and Researchers 
 • Testers 
-4. Initial Set of Project Requirements expressed as user stories with estimates completion times 
-• As a user of the product, I need a better financial system that wouldn’t require me to sign up for 
-multiple software or services. I want this user story to be implemented in two days. 
-• As a user of the product, I need a better financial system that performs custom formulas, creates 
+4. Initial Set of Project Requirements expressed as user stories with estimates completion times
+* As a user of the product, I need a better financial system that wouldn’t require me to sign up for 
+multiple software or services. I want this user story to be implemented in two days.
+*  As a user of the product, I need a better financial system that performs custom formulas, creates 
 beautiful design layouts, synchronizes databases, customizes formulas, and automates 
 calculations. This financial system should help me handle everyday financial management 
 including calculating a monthly budget and showing available budget for different spending 
