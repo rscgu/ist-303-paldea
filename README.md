@@ -172,11 +172,11 @@ pytest --cov=my_paldea --cov-report=html
 ## 📈 Agile Development Process
 
 ### Team Structure
-- **Samantha Aguirre**: Transaction management and UI
-- **Gerves Francois Baniakina**: Database setup and authentication
-- **Qiao Huang**: Budget features (Tasks 8 & 9)
-- **Rachan Sailamai**: UI/UX improvements
-- **Manish Shrivastav**: Testing and quality assurance
+- **Samantha Aguirre**: Transaction management and UI, Epic 4: Enhanced Visualization
+- **Gerves Francois Baniakina**: Database setup and authentication, Epic 5: Export & Reporting
+- **Qiao Huang**: Budget features (Tasks 8 & 9), Epic 6: Multi-Currency Support
+- **Rachan Sailamai**: UI/UX improvements, Epic 4: Enhanced Visualization (Support)
+- **Manish Shrivastav**: Testing and quality assurance, Epic 5: Export & Reporting (Support)
 
 ### Development Timeline
 - **Week 1**: Foundation (Database, Authentication, Basic Transactions)
@@ -203,6 +203,31 @@ pytest --cov=my_paldea --cov-report=html
 - Advanced budget features (rollover budgets, recommendations)
 - Reporting system (monthly/yearly reports)
 - Mobile responsive design improvements
+
+### Milestone 2.0 Team Assignments
+- **Epic 4: Enhanced Visualization** - Samantha Aguirre
+  - Task 21: Implement trend line charts for spending patterns
+  - Task 22: Add forecasting algorithms for expense prediction
+  - Task 23: Create interactive drill-down chart capabilities
+  - Task 24: Develop custom dashboard layouts
+- **Epic 5: Export & Reporting** - Gerves Francois Baniakina
+  - Task 25: Generate PDF financial reports with charts
+  - Task 26: Implement CSV data export functionality
+  - Task 27: Create tax preparation summary reports
+  - Task 28: Add scheduled report generation
+- **Epic 6: Multi-Currency Support** - Qiao Huang
+  - Task 45: Integrate currency exchange rate APIs
+  - Task 46: Implement multi-currency transaction handling
+  - Task 47: Add currency preference settings
+  - Task 48: Create currency conversion history tracking
+- **Epic 4: Enhanced Visualization (Support)** - Rachan Sailamai
+  - Task 21: Assist with trend line chart implementation
+  - Task 23: Support interactive drill-down features
+  - Task 24: Help with custom dashboard layouts
+- **Epic 5: Export & Reporting (Support)** - Manish Shrivastav
+  - Task 26: Assist with CSV export functionality
+  - Task 27: Support tax preparation reports
+  - Task 28: Help with scheduled report generation
 
 ---
 
