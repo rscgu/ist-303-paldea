@@ -96,7 +96,7 @@ personal-finance-tracker/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/lucky2uhqt/IST-303-paldea.git
+   git clone https://github.com/rscgu/ist-303-paldea.git
    cd ist-303-paldea
    ```
 
@@ -231,7 +231,7 @@ pytest --cov=my_paldea --cov-report=html
 - [pytest Documentation](https://docs.pytest.org/)
 - [SQLite Documentation](https://www.sqlite.org/docs.html)
 - [Bootstrap 5 Documentation](https://getbootstrap.com/docs/5.1/)
-- [Project Repository](https://github.com/lucky2uhqt/IST-303-paldea.git)
+- [Project Repository](https://github.com/rscgu/ist-303-paldea.git)
 
 ---
 
