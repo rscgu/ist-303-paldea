@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% block container %}
+<div class="container mt-5">
+    <div class="alert alert-info text-center" role="alert">
+        <strong>Budget Management Demo:</strong> This page demonstrates the budget setting and progress tracking features of the Personal Finance Tracker app with sample data.
+    </div>
+
+    <div class="text-center mb-5">
+        <h1 class="mb-4">Budget Management Demo</h1>
+        <h2 class="mb-4">Set Budgets & Track Progress</h2>
+        <p class="text-muted">Experience the full budget management workflow with pre-loaded sample data</p>
+    </div>
+
+    <!-- Demo Navigation -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Demo Features</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <a href="#set-budget" class="btn btn-outline-primary w-100 mb-2">Set Budget</a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="#view-progress" class="btn btn-outline-success w-100 mb-2">View Progress</a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="#sample-data" class="btn btn-outline-info w-100 mb-2">Add Sample Data</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Set Budget Section -->
+    <div id="set-budget" class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>📊 Set Monthly Budget</h4>
+                    <p class="text-muted mb-0">Set spending limits for different categories</p>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success" role="alert">
+                        <strong>Demo Mode:</strong> Budgets are set with sample data. In a real application, this would save to your account.
+                    </div>
+
+                    <form method="POST" action="{{ url_for('paldea_app.add_budget') }}">
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select a category...</option>
+                                <option value="Groceries">🛒 Groceries</option>
+                                <option value="Entertainment">🎬 Entertainment</option>
+                                <option value="Transportation">🚗 Transportation</option>
+                                <option value="Rent">🏠 Rent</option>
+                                <option value="Utilities">⚡ Utilities</option>
+                                <option value="Healthcare">🏥 Healthcare</option>
+                                <option value="Education">📚 Education</option>
+                                <option value="Shopping">🛍️ Shopping</option>
+                                <option value="Dining">🍽️ Dining</option>
+                                <option value="Other">📝 Other</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="budget_amount" class="form-label">Monthly Budget Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number"
+                                       class="form-control"
+                                       id="budget_amount"
+                                       name="budget_amount"
+                                       step="0.01"
+                                       min="0"
+                                       placeholder="0.00"
+                                       required>
+                            </div>
+                            <div class="form-text">Enter the maximum amount you want to spend in this category per month.</div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">Save Budget (Demo)</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sample Budget Progress -->
+    <div id="view-progress" class="row justify-content-center mb-5">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4>📈 Budget Progress Dashboard</h4>
+                    <p class="text-muted mb-0">Visual progress tracking with color-coded indicators</p>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info" role="alert">
+                        <strong>Demo Data:</strong> Showing sample budget progress for demonstration purposes.
+                    </div>
+
+                    <!-- Sample Budget Cards -->
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">Groceries</h6>
+                                    <span class="badge bg-success">45.0%</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <small class="text-muted">Spent</small>
+                                            <small class="text-muted">$90.00 of $200.00</small>
+                                        </div>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-success"
+                                                 role="progressbar"
+                                                 style="width: 45%"
+                                                 aria-valuenow="45"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                                45%
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="border-end">
+                                                <div class="fw-bold text-success">$90.00</div>
+                                                <small class="text-muted">Spent</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="border-end">
+                                                <div class="fw-bold text-success">$110.00</div>
+                                                <small class="text-muted">Remaining</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold text-primary">$200.00</div>
+                                            <small class="text-muted">Budget</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-success mt-2 mb-0 py-2">
+                                        <small><strong>✅ On track</strong></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">Entertainment</h6>
+                                    <span class="badge bg-warning">75.0%</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <small class="text-muted">Spent</small>
+                                            <small class="text-muted">$112.50 of $150.00</small>
+                                        </div>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-warning"
+                                                 role="progressbar"
+                                                 style="width: 75%"
+                                                 aria-valuenow="75"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                                75%
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="border-end">
+                                                <div class="fw-bold text-warning">$112.50</div>
+                                                <small class="text-muted">Spent</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="border-end">
+                                                <div class="fw-bold text-success">$37.50</div>
+                                                <small class="text-muted">Remaining</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold text-primary">$150.00</div>
+                                            <small class="text-muted">Budget</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-info mt-2 mb-0 py-2">
+                                        <small><strong>💡 Getting close to limit</strong></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">Rent</h6>
+                                    <span class="badge bg-danger">92.3%</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <small class="text-muted">Spent</small>
+                                            <small class="text-muted">$1200.00 of $1300.00</small>
+                                        </div>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-danger"
+                                                 role="progressbar"
+                                                 style="width: 92%"
+                                                 aria-valuenow="92"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                                92%
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="border-end">
+                                                <div class="fw-bold text-danger">$1200.00</div>
+                                                <small class="text-muted">Spent</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="border-end">
+                                                <div class="fw-bold text-success">$100.00</div>
+                                                <small class="text-muted">Remaining</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold text-primary">$1300.00</div>
+                                            <small class="text-muted">Budget</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-warning mt-2 mb-0 py-2">
+                                        <small><strong>⚠️ Almost at limit!</strong></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">📈 Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-3">
+                                    <div class="fw-bold text-primary fs-4">3</div>
+                                    <small class="text-muted">Categories</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="fw-bold text-success fs-4">$2650.00</div>
+                                    <small class="text-muted">Total Budget</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="fw-bold text-warning fs-4">$1402.50</div>
+                                    <small class="text-muted">Total Spent</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="fw-bold text-info fs-4">$1247.50</div>
+                                    <small class="text-muted">Total Remaining</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sample Data Section -->
+    <div id="sample-data" class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>🎯 Add Sample Data</h4>
+                    <p class="text-muted mb-0">Load sample transactions to see budget progress in action</p>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Demo Feature:</strong> This would add sample transactions to demonstrate budget tracking. In demo mode, this shows how the system works with real data.
+                    </div>
+
+                    <div class="mb-4">
+                        <h6>Sample Transactions that would be added:</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Weekly grocery shopping
+                                <span class="badge bg-danger rounded-pill">-$150.00</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Movie tickets
+                                <span class="badge bg-danger rounded-pill">-$75.50</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Monthly rent payment
+                                <span class="badge bg-danger rounded-pill">-$200.00</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Monthly salary
+                                <span class="badge bg-success rounded-pill">+$3000.00</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('paldea_app.add_sample_data') }}" class="btn btn-outline-info">Add Sample Data (Demo)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tips Section -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">💡 Budget Management Tips</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Setting Effective Budgets</h6>
+                            <ul>
+                                <li>Use the 50/30/20 rule: 50% needs, 30% wants, 20% savings</li>
+                                <li>Review your past spending patterns</li>
+                                <li>Set slightly lower budgets to encourage saving</li>
+                                <li>Start with essential categories first</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Progress Tracking</h6>
+                            <ul>
+                                <li>Green: Under 70% - You're doing great!</li>
+                                <li>Yellow: 70-90% - Keep an eye on spending</li>
+                                <li>Red: Over 90% - Time to cut back</li>
+                                <li>Regular check-ins help maintain control</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="text-center">
+        <a href="{{ url_for('paldea_app.home') }}" class="btn btn-secondary me-2">Back to Home</a>
+        <a href="{{ url_for('paldea_app.budget_form') }}" class="btn btn-primary me-2">Try Real Budget Setting</a>
+        <a href="{{ url_for('paldea_app.budget_progress') }}" class="btn btn-success">View Real Progress</a>
+    </div>
+</div>
+{% endblock %}
