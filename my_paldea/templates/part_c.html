@@ -135,6 +135,34 @@
             <h5>Project Structure</h5>
             <p>The project was organized using agile methodologies with clear epic and task breakdowns:</p>
 
+            <h6>Directory Structure:</h6>
+            <pre><code>personal-finance-tracker/
+│
+├── my_paldea/
+│   ├── __init__.py           # Application factory
+│   ├── models.py             # Database models
+│   ├── views.py              # View functions
+│   ├── config.py             # Configuration
+│   ├── finSystem.py          # Financial system logic
+│   ├── templates/
+│   │   ├── base.html         # Base template
+│   │   ├── index.html        # Home page
+│   │   ├── budget.html       # Budget setting form
+│   │   ├── budget_progress.html # Progress visualization
+│   │   ├── login.html        # Authentication
+│   │   └── register.html     # User registration
+│   └── static/
+│       ├── css/main.css      # Custom styling
+│       └── js/main.js        # JavaScript functionality
+│
+├── Part C/                   # Milestone 1.0 presentation materials
+├── app.py                    # Main Flask application
+├── budget_routes.py          # Budget-specific routes
+├── run.py                    # Application runner
+├── requirements.txt          # Python dependencies
+├── finance.db               # SQLite database
+└── README.md                # This file</code></pre>
+
             <h6>Epics Defined:</h6>
             <ul>
                 <li><strong>Epic 1:</strong> Core Transaction Management (Authentication, CRUD operations)</li>
