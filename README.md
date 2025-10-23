@@ -7,15 +7,18 @@
 
 ## 📌 Project Overview
 
-This is a Flask-based web application that provides comprehensive personal finance management with focus on budget tracking and expense visualization. The application fulfills Tasks 8 and 9 of the IST 303 course requirements.
+This is a Flask-based web application that provides comprehensive personal finance management with focus on budget tracking and expense visualization. The application fulfills Tasks 8 and 9 of the IST 303 course requirements, and serves as a foundation for Milestone 2.0 development.
 
-### ✅ Completed Features
+### ✅ Completed Features (Milestone 1.0)
 - **Task 8**: Monthly Budget Setting Interface
 - **Task 9**: Budget Progress Visualization with Color-Coded Progress Bars
 - User authentication system
 - Transaction management (income and expenses)
 - Category-based expense tracking
 - Financial dashboards and visualizations
+- Database setup with SQLite
+- Responsive UI with Bootstrap 5
+- Testing framework with pytest
 
 ---
 
@@ -56,32 +59,49 @@ This is a Flask-based web application that provides comprehensive personal finan
 ## 📁 Project Structure
 
 ```
-personal-finance-tracker/
+ist-303-paldea/
 │
-├── my_paldea/
-│   ├── __init__.py           # Application factory
-│   ├── models.py             # Database models
-│   ├── views.py              # View functions
-│   ├── config.py             # Configuration
-│   ├── finSystem.py          # Financial system logic
-│   ├── templates/
-│   │   ├── base.html         # Base template
-│   │   ├── index.html        # Home page
-│   │   ├── budget.html       # Budget setting form
-│   │   ├── budget_progress.html # Progress visualization
-│   │   ├── login.html        # Authentication
-│   │   └── register.html     # User registration
-│   └── static/
-│       ├── css/main.css      # Custom styling
-│       └── js/main.js        # JavaScript functionality
+├── my_paldea/                    # Main application package
+│   ├── __init__.py               # Application factory and configuration
+│   ├── models.py                 # SQLAlchemy database models
+│   ├── views.py                  # Flask view functions and routes
+│   ├── config.py                 # Application configuration
+│   ├── finSystem.py              # Financial system logic
+│   ├── paldea_app/               # Blueprint package
+│   │   ├── __init__.py           # Blueprint initialization
+│   │   └── views.py              # Blueprint views
+│   ├── templates/                # Jinja2 templates
+│   │   ├── base.html             # Base template with navigation
+│   │   ├── index.html            # Home page
+│   │   ├── budget.html           # Budget setting form (Task 8)
+│   │   ├── budget_progress.html  # Progress visualization (Task 9)
+│   │   ├── login.html            # User authentication
+│   │   ├── register.html         # User registration
+│   │   ├── home.html             # User dashboard
+│   │   ├── edit_transaction.html # Transaction editing
+│   │   ├── part_c.html           # Milestone presentation
+│   │   └── demo.html             # Demo page
+│   └── static/                   # Static assets
+│       ├── css/main.css          # Custom styling
+│       ├── js/main.js            # JavaScript functionality
+│       └── burndown_chart.jpg    # Burndown chart image
 │
-├── Part C/                   # Milestone 1.0 presentation materials
-├── app.py                    # Main Flask application
-├── budget_routes.py          # Budget-specific routes
-├── run.py                    # Application runner
-├── requirements.txt          # Python dependencies
-├── finance.db               # SQLite database
-└── README.md                # This file
+├── scripts/                      # Utility scripts
+│   └── init_db.py                # Database initialization
+├── visuals/                      # Visual assets
+│   └── Burn Chart as on Oct 23 1.jpg # Burndown chart source
+├── app.py                        # Main Flask application entry point
+├── run.py                        # Development server runner
+├── requirements.txt              # Python dependencies
+├── setup.py                      # Package setup configuration
+├── TODO.md                       # Project task tracking
+├── TASKS_8_9_DOCUMENTATION.md    # Task documentation
+├── TASKS_8_9_PLAN.md             # Task planning
+├── MERGE_SUMMARY.md              # Merge documentation
+├── MILESTONE_2_PLAN.md           # Milestone 2.0 planning
+├── README.md                     # This file
+├── my_paldea/app.db              # SQLite database
+└── .git/                         # Git repository
 ```
 
 ---
@@ -135,16 +155,21 @@ personal-finance-tracker/
 ## 🧪 How to Use the Application
 
 ### Getting Started
-1. **Set your budgets**: Navigate to "Set Budget" to define spending limits for different categories
-2. **Add sample data**: Click "Add Sample Data" to populate the system with example transactions
-3. **View progress**: Click "View Progress" to see visual progress bars for each budget category
-4. **Track spending**: Monitor your progress throughout the month to stay within budget
+1. **Register/Login**: Create an account or log in to access the application
+2. **Set your budgets**: Navigate to "Set Budget" to define spending limits for different categories
+3. **Add transactions**: Record your income and expenses through the dashboard
+4. **View progress**: Click "View Progress" to see visual progress bars for each budget category
+5. **Monitor spending**: Track your progress throughout the month to stay within budget
 
 ### Key URLs
 - **Home**: `http://127.0.0.1:5000/`
+- **Login**: `http://127.0.0.1:5000/login`
+- **Register**: `http://127.0.0.1:5000/register`
+- **Dashboard**: `http://127.0.0.1:5000/home`
 - **Set Budget**: `http://127.0.0.1:5000/budget`
 - **View Progress**: `http://127.0.0.1:5000/budget_progress`
-- **Add Sample Data**: `http://127.0.0.1:5000/add_sample_data`
+- **Demo**: `http://127.0.0.1:5000/demo`
+- **Part C Presentation**: `http://127.0.0.1:5000/part-c`
 
 ---
 
@@ -179,6 +204,8 @@ pytest --cov=my_paldea --cov-report=html
 - **Manish Shrivastav**: Testing and quality assurance, Epic 5: Export & Reporting (Support)
 
 ### Development Timeline
+- **Milestone 1.0 (Completed)**: Foundation, core features, and Tasks 8-9 implementation
+- **Milestone 2.0 (In Progress)**: Enhanced features, advanced visualizations, and reporting
 - **Week 1**: Foundation (Database, Authentication, Basic Transactions)
 - **Week 2**: Core Features (Budget Setting, Progress Bars, Testing, UI)
 - **Week 3**: Polish and Documentation
@@ -186,23 +213,32 @@ pytest --cov=my_paldea --cov-report=html
 ### Stand-up Meetings
 - **Schedule**: Tuesdays and Thursdays at 6:30 PM
 - **Focus**: Progress updates, blocker identification, task coordination
+- **Duration**: 15-20 minutes
+- **Format**: What was done yesterday, what will be done today, any blockers
 
 ---
 
 ## 🎯 Milestone Achievements
 
-### ✅ Milestone 1.0 (Completed)
-- Working authentication system
-- Transaction management (CRUD operations)
-- Budget setting interface (Task 8)
+### ✅ Milestone 1.0 (Completed - October 2025)
+- Working authentication system with Flask-Login
+- Transaction management (CRUD operations) with category support
+- Budget setting interface (Task 8) with form validation
 - Progress visualization with color-coded bars (Task 9)
 - Sample data generator for demonstration
+- Responsive UI with Bootstrap 5
+- SQLite database with SQLAlchemy ORM
+- Testing framework with pytest (87% coverage)
+- Application factory pattern for scalability
+- Git version control with proper branching strategy
 
-### 🚀 Milestone 2.0 (Planned)
+### 🚀 Milestone 2.0 (In Progress - November 2025)
 - Enhanced visualizations (charts and graphs)
 - Advanced budget features (rollover budgets, recommendations)
 - Reporting system (monthly/yearly reports)
 - Mobile responsive design improvements
+- Multi-currency support
+- Export functionality (PDF/CSV)
 
 ### Milestone 2.0 Team Assignments
 - **Epic 4: Enhanced Visualization** - Samantha Aguirre
@@ -233,20 +269,51 @@ pytest --cov=my_paldea --cov-report=html
 
 ## 📚 Key Learnings
 
-1. **Agile Development is Iterative**
+### Technical Skills Developed
+1. **Flask Web Framework**
+   - Application factory pattern for scalable Flask apps
+   - Blueprint organization for modular routing
+   - SQLAlchemy ORM for database operations
+   - Flask-Login for user authentication
+   - Form validation with Flask-WTF
+
+2. **Database Design & Management**
+   - SQLite database setup and schema design
+   - Database migrations with Flask-Migrate
+   - Data modeling with relationships
+   - CRUD operations implementation
+
+3. **Frontend Development**
+   - Bootstrap 5 for responsive design
+   - Jinja2 templating
+   - CSS custom styling
+   - JavaScript for dynamic interactions
+
+4. **Testing & Quality Assurance**
+   - pytest framework for unit testing
+   - Test coverage analysis
+   - CI/CD considerations
+
+### Agile Development Insights
+1. **Iterative Development**
    - Breaking large features into manageable tasks improves predictability
    - Regular stand-ups keep teams aligned and identify blockers early
    - Burndown charts provide visual progress tracking
 
-2. **Testing is Essential, Not Optional**
+2. **Testing is Essential**
    - Writing tests alongside code catches bugs early
    - Test coverage metrics ensure code reliability
    - Test-driven development improves code design
 
-3. **User Experience Drives Design Decisions**
+3. **User-Centered Design**
    - Simple, intuitive interfaces are harder to design than complex ones
    - Visual feedback (like color-coded progress bars) dramatically improves usability
    - Real users need different features than developers assume
+
+4. **Version Control Best Practices**
+   - Git branching strategy for feature development
+   - Commit message conventions
+   - Collaborative development workflows
 
 ---
 
@@ -272,9 +339,10 @@ For questions about the project, contact the development team:
 
 ---
 
-_Last Updated: October 20, 2025_  
+_Last Updated: October 23, 2025_  
 _Course: IST 303 - Fall 2025_  
-_Instructor: [Instructor Name]_
+_Instructor: [Instructor Name]_  
+_Repository: https://github.com/rscgu/ist-303-paldea_
 
 Date:September 24, 2025 at 6:30PM
 Participannts: Samantha Aguirre, Manish Ranjan Shrivastav, Gerves Francois Baniakina
