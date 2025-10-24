@@ -9,6 +9,8 @@
 
 This is a Flask-based web application that provides comprehensive personal finance management with focus on budget tracking and expense visualization. The application fulfills Tasks 8 and 9 of the IST 303 course requirements, and serves as a foundation for Milestone 2.0 development.
 
+[PowerPoint Presentation](https://cgu0-my.sharepoint.com/:p:/g/personal/qiao_huang_cgu_edu/ERRYxgg2jvxNiSqgoKJ8n3IBPAp-DzCQfPcbpgqJ9UxorQ)
+
 ### ✅ Completed Features (Milestone 1.0)
 - **Task 8**: Monthly Budget Setting Interface
 - **Task 9**: Budget Progress Visualization with Color-Coded Progress Bars
