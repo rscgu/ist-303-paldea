@@ -1,0 +1,13 @@
+1. Present to your class Milestone 2.0 of your project. Each team member must present a portion of the
+team presentation.
+2. You must present working code. In addition, your presentation must include:
+Succinct and clear explanation of what the Milestone 2.0 does and how it fulfills the user stories
+Documentation of the use of agile methods, including a final burndown chart
+explanation of how the code was tested, including details on the level of code coverage
+highlight key successes and failures, including lessons learned about software development
+3. Upload any presentation materials to your github repository in a folder named "Part D".
+4. Submission of your final code repository. The final commit timestamp in your team repository must be
+prior to the assignment due date. Your README file must contain:
+ALL the details on how to run the program, how to test it, and how to report the test coverage.
+the three most important things you learned about software development working on your
+project.
