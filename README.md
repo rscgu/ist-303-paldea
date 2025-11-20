@@ -22,6 +22,22 @@ This is a Flask-based web application that provides comprehensive personal finan
 - Responsive UI with Bootstrap 5
 - Testing framework with pytest
 
+### 🚀 Upcoming Features (Milestone 2.0)
+- Receipt Upload & OCR Integration for automatic transaction entry
+- Subscription & Payment Reminders with automated notifications
+- Investment Portfolio Tracking with performance metrics
+- Loan Management System with payment countdown
+- Advanced Financial Goals with annual targets
+- Enhanced Data Visualization including trend charts and forecasting
+- Export & Reporting Features with PDF reports and CSV export
+- Mobile Responsiveness improvements and PWA capabilities
+- Multi-currency Support for international transactions
+- Advanced Filtering & Search with saved filters and bulk operations
+- API Development for REST endpoints and third-party integrations
+- Enhanced Security with 2FA and data encryption
+- Performance Optimization with caching and CDN integration
+- Automated Testing Suite expansion
+
 ---
 
 ## 🚀 Key Features
@@ -92,6 +108,8 @@ ist-303-paldea/
 │   └── init_db.py                # Database initialization
 ├── visuals/                      # Visual assets
 │   └── Burn Chart as on Oct 23 1.jpg # Burndown chart source
+├── my_paldea_part_d/             # Additional views for Part D
+│   └── secondary_views.py        # Secondary view functions
 ├── app.py                        # Main Flask application entry point
 ├── run.py                        # Development server runner
 ├── requirements.txt              # Python dependencies
@@ -225,4 +243,4 @@ Please open issues in the repository for bugs or feature requests.
 
 ---
 
-_Last updated: October 23, 2025_
+_Last updated: October 24, 2024_
