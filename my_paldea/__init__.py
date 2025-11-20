@@ -7,6 +7,8 @@ from authlib.integrations.flask_client import OAuth
 import redis
 from redis import Redis
 import ldap3
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 # create global extenions, but don't attach to app yet!
 # bcrypt = Bcrypt()
@@ -15,6 +17,7 @@ login_manager = LoginManager()
 bcrypt = Bcrypt()
 redis = Redis()
 oauth = OAuth()
+scheduler = BackgroundScheduler()
 
 # Application factory design pattern to avoid a cycle
 def create_app():
@@ -34,9 +37,21 @@ def create_app():
     register_oauth(app)
 
     ## Import and register blueprints *after* app is created
-    from my_paldea.paldea_app.views import paldea_app
+    from my_paldea.paldea_app.views import paldea_app, generate_scheduled_reports
 
     app.register_blueprint(paldea_app)
+    
+    # Initialize scheduler for scheduled reports
+    if not scheduler.running:
+        scheduler.start()
+        # Schedule report generation to run daily at midnight
+        scheduler.add_job(
+            func=generate_scheduled_reports,
+            trigger=CronTrigger(hour=0, minute=0),
+            id='generate_scheduled_reports',
+            name='Generate scheduled financial reports',
+            replace_existing=True
+        )
     #app.register_blueprint(facebook_blueprint)
     #app.register_blueprint(google_blueprint)
     #app.register_blueprint(twitter_blueprint)

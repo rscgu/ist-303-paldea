@@ -31,6 +31,9 @@
                 <ul class="navbar-nav ms-auto">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('paldea_app.currency_settings') }}">Currency</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('paldea_app.logout') }}">Logout</a>
                         </li>
                     {% else %}

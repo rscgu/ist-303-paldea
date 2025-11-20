@@ -13,6 +13,7 @@ class User(UserMixin,db.Model):
     email = db.Column(db.String(150), nullable=False, unique=True)
     pwdhash = db.Column(db.String(256), nullable=False)
     budget = db.Column(db.Float, default=0.0)  # Monthly budget
+    preferred_currency_id = db.Column(db.Integer, db.ForeignKey('currency.id'), default=1)  # Default USD
     expenses = db.relationship('Expense', backref='user', lazy=True)
 
     def __init__(self, username, password, email):
@@ -65,20 +66,6 @@ class CategoryBudget(db.Model):
     def __repr__(self):
         return f'<CategoryBudget {self.category.name}: ${self.budget_amount} ({self.time_period})>'
 
-class Transaction(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    description = db.Column(db.String(200), nullable=False)
-    amount = db.Column(db.Float, nullable=False)
-    type = db.Column(db.String(20), nullable=False)  # 'income' or 'expense'
-    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
-    date = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
-    category = db.relationship('Category', backref='transactions')
-
-    def __repr__(self):
-        return f'<Transaction {self.description}: ${self.amount} ({self.type})>'
-
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(200), nullable=False)
@@ -103,6 +90,7 @@ class TransactionForm(FlaskForm):
     amount = FloatField('Amount', validators=[InputRequired()])
     type = SelectField('Type', choices=[('income', 'Income'), ('expense', 'Expense')], validators=[InputRequired()])
     category = SelectField('Category', coerce=int, validators=[InputRequired()])
+    currency = SelectField('Currency', coerce=int, validators=[InputRequired()])
     submit = SubmitField('Add Transaction')
 
 class CategoryBudgetForm(FlaskForm):
@@ -142,4 +130,67 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[InputRequired()])
     submit = SubmitField('Login')
 
+class Currency(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(3), nullable=False, unique=True)  # e.g., 'USD', 'EUR'
+    name = db.Column(db.String(50), nullable=False)  # e.g., 'US Dollar'
+    symbol = db.Column(db.String(10), nullable=False)  # e.g., '$'
 
+    def __repr__(self):
+        return f'<Currency {self.code}: {self.name}>'
+
+class ConversionHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    from_currency_id = db.Column(db.Integer, db.ForeignKey('currency.id'), nullable=False)
+    to_currency_id = db.Column(db.Integer, db.ForeignKey('currency.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    converted_amount = db.Column(db.Float, nullable=False)
+    rate = db.Column(db.Float, nullable=False)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='conversions')
+    from_currency = db.relationship('Currency', foreign_keys=[from_currency_id])
+    to_currency = db.relationship('Currency', foreign_keys=[to_currency_id])
+
+    def __repr__(self):
+        return f'<Conversion {self.amount} {self.from_currency.code} to {self.converted_amount} {self.to_currency.code} at {self.rate}>'
+
+# Update Transaction model to include currency
+# Note: This requires a migration in production, but for this, we'll add the field
+class Transaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(200), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    type = db.Column(db.String(20), nullable=False)  # 'income' or 'expense'
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
+    currency_id = db.Column(db.Integer, db.ForeignKey('currency.id'), nullable=False, default=1)  # Default to USD (id=1)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    category = db.relationship('Category', backref='transactions')
+    currency = db.relationship('Currency', backref='transactions')
+
+    def __repr__(self):
+        return f'<Transaction {self.description}: {self.amount} {self.currency.symbol} ({self.type})>'
+
+
+
+class ScheduledReport(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    report_type = db.Column(db.String(50), nullable=False)  # 'monthly', 'quarterly', 'yearly'
+    report_format = db.Column(db.String(10), nullable=False, default='pdf')  # 'pdf', 'csv'
+    frequency = db.Column(db.String(20), nullable=False)  # 'monthly', 'quarterly', 'yearly'
+    day_of_month = db.Column(db.Integer, default=1)  # Day of month to generate report
+    is_active = db.Column(db.Boolean, default=True)
+    last_generated = db.Column(db.DateTime, nullable=True)
+    next_generation = db.Column(db.DateTime, nullable=True)
+    email_enabled = db.Column(db.Boolean, default=False)
+    email_address = db.Column(db.String(150), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='scheduled_reports')
+
+    def __repr__(self):
+        return f'<ScheduledReport {self.report_type} for user {self.user_id}>'

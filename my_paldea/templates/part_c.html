@@ -445,26 +445,30 @@ def delete_transaction(transaction_id):
                                     <h6>File: my_paldea/templates/home.html (Transaction List Display)</h6>
                                     <p>This template section renders the transaction history table with edit/delete actions.</p>
                                     <pre><code class="language-html">{% raw %}{% for transaction in transactions %}
-    <tr>
-        <td>{{ transaction.date.strftime('%Y-%m-%d %H:%M') }}</td>
-        <td>{{ transaction.description }}</td>
-        <td>
-            {% if transaction.type == 'income' %}
-                <span class="badge bg-success">Income</span>
-            {% else %}
-                <span class="badge bg-danger">Expense</span>
-            {% endif %}
-        </td>
-        <td>{{ transaction.category.name if transaction.category else 'N/A' }}</td>
-        <td>${{ "%.2f"|format(transaction.amount) }}</td>
-        <td>
-            <a href="{{ url_for('paldea_app.edit_transaction', transaction_id=transaction.id) }}" class="btn btn-sm btn-warning">Edit</a>
-            <form method="POST" action="{{ url_for('paldea_app.delete_transaction', transaction_id=transaction.id) }}" style="display:inline;">
-                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this transaction?')">Delete</button>
-            </form>
-        </td>
-    </tr>
-{% endfor %}{% endraw %}</code></pre>
+                                            <tr>
+                                                <td>{{ transaction.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                <td>{{ transaction.description }}</td>
+                                                <td>
+                                                    {% if transaction.type == 'income' %}
+                                                        <span class="badge bg-success">Income</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Expense</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ transaction.category.name if transaction.category else 'N/A' }}</td>
+                                                <td>${{ "%.2f"|format(transaction.amount) }}</td>
+                                                <td>
+                                                    {% if not demo %}
+                                                    <a href="{{ url_for('paldea_app.edit_transaction', transaction_id=transaction.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                                    <form method="POST" action="{{ url_for('paldea_app.delete_transaction', transaction_id=transaction.id) }}" style="display:inline;">
+                                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this transaction?')">Delete</button>
+                                                    </form>
+                                                    {% else %}
+                                                    <span class="text-muted">Demo Mode - Actions Disabled</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}{% endraw %}</code></pre>
                                     {% elif member == 'Gerves Francois Baniakina' %}
                                     <h6>File: my_paldea/paldea_app/views.py (Registration Route)</h6>
                                     <p>This route handles user registration, validating input and creating new user accounts.</p>
@@ -478,6 +482,7 @@ def register():
     if form.validate_on_submit():
         username = form.username.data
         email = form.email.data
+        password = form.password.data
 
         # Check if username or email already exists
         existing_user = User.query.filter(
@@ -485,18 +490,23 @@ def register():
         ).first()
         if existing_user:
             if existing_user.username == username:
-                flash('This username is already taken. Please choose another.', 'warning')
+                    flash('This username is already taken. Please choose another.', 'warning')
             if existing_user.email == email:
                 flash('This email is already registered. Please use another.', 'warning')
             return render_template('register.html', form=form)
 
         # Create new user
-        user = User(username=username, password=form.password.data, email=email)
+        user = User(username=username, password=password, email=email)
         db.session.add(user)
         db.session.commit()
 
         flash('You are now registered. Please login.', 'success')
         return redirect(url_for('paldea_app.login'))
+
+    if form.errors:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"{field.capitalize()}: {error}", 'danger')
 
     return render_template('register.html', form=form)</code></pre>
 
@@ -506,11 +516,11 @@ def register():
 def login():
     form = LoginForm()
 
-    if form.validate_on_submit():
+    if form.validate_on_submit():  # triggered on POST if validators pass
         username = form.username.data
         password = form.password.data
 
-        # Try local DB login first
+        # --- Try local DB login first ---
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             login_user(user)
@@ -521,6 +531,7 @@ def login():
             flash("Invalid username or password", "danger")
             return render_template("login.html", form=form)
 
+    # GET request or failed POST → show form
     return render_template("login.html", form=form)</code></pre>
 
                                     <h6>File: my_paldea/paldea_app/models.py (User Model)</h6>
@@ -530,7 +541,8 @@ def login():
     username = db.Column(db.String(150),nullable=False, unique=True)
     email = db.Column(db.String(150), nullable=False, unique=True)
     pwdhash = db.Column(db.String(256), nullable=False)
-    budget = db.Column(db.Float, default=0.0)
+    budget = db.Column(db.Float, default=0.0)  # Monthly budget
+    expenses = db.relationship('Expense', backref='user', lazy=True)
 
     def __init__(self, username, password, email):
         self.username = username
@@ -539,6 +551,12 @@ def login():
         else:
             self.pwdhash = ''
         self.email = email
+
+    def get_total_expenses(self):
+        return sum(expense.amount for expense in self.expenses)
+
+    def is_budget_exceeded(self):
+        return self.get_total_expenses() > self.budget if self.budget > 0 else False
 
     def check_password(self, password):
         return check_password_hash(self.pwdhash,password)</code></pre>
@@ -590,7 +608,7 @@ def set_category_budget():
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
     budget_amount = db.Column(db.Float, nullable=False)
-    time_period = db.Column(db.String(20), default='monthly')
+    time_period = db.Column(db.String(20), default='monthly')  # 'monthly', 'yearly', etc.
 
     user = db.relationship('User', backref='category_budgets')
     category = db.relationship('Category', backref='budgets')
@@ -601,22 +619,22 @@ def set_category_budget():
                                     <h6>File: my_paldea/templates/home.html (Progress Bar UI)</h6>
                                     <p>This template section displays visual progress bars showing budget usage with color coding.</p>
                                     <pre><code class="language-html">{% raw %}{% for budget in category_budgets %}
-    {% set spent = category_spent.get(budget.category_id, 0) %}
-    {% set percentage = (spent / budget.budget_amount * 100) if budget.budget_amount > 0 else 0 %}
-    {% set progress_class = 'bg-success' if percentage < 70 else 'bg-warning' if percentage < 90 else 'bg-danger' %}
-    <div class="mb-3">
-        <h5>{{ budget.category.name }}</h5>
-        <div class="progress mb-2">
-            <div class="progress-bar {{ progress_class }}" role="progressbar" style="width: {{ percentage }}%" aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-        <p class="mb-0">${{ "%.2f"|format(spent) }} of ${{ "%.2f"|format(budget.budget_amount) }} spent ({{ "%.1f"|format(percentage) }}%)</p>
-        {% if percentage > 100 %}
-            <div class="alert alert-danger mt-2">
-                <strong>Alert!</strong> You have exceeded your budget for {{ budget.category.name }}!
-            </div>
-        {% endif %}
-    </div>
-{% endfor %}{% endraw %}</code></pre>
+                            {% set spent = category_spent.get(budget.category_id, 0) %}
+                            {% set percentage = (spent / budget.budget_amount * 100) if budget.budget_amount > 0 else 0 %}
+                            {% set progress_class = 'bg-success' if percentage < 70 else 'bg-warning' if percentage < 90 else 'bg-danger' %}
+                            <div class="mb-3">
+                                <h5>{{ budget.category.name }}</h5>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar {{ progress_class }}" role="progressbar" style="width: {{ percentage }}%" aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <p class="mb-0">${{ "%.2f"|format(spent) }} of ${{ "%.2f"|format(budget.budget_amount) }} spent ({{ "%.1f"|format(percentage) }}%)</p>
+                                {% if percentage > 100 %}
+                                    <div class="alert alert-danger mt-2">
+                                        <strong>Alert!</strong> You have exceeded your budget for {{ budget.category.name }}!
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}{% endraw %}</code></pre>
                                     {% elif member == 'Rachan Sailamai' %}
                                     <h6>File: my_paldea/paldea_app/views.py (Set Goal Route)</h6>
                                     <p>This route handles setting financial goals for savings, investments, or loans.</p>
@@ -648,25 +666,25 @@ def set_goal():
                                     <h6>File: my_paldea/templates/home.html (Goal Progress Display)</h6>
                                     <p>This template section shows goal progress with visual indicators and deadlines.</p>
                                     <pre><code class="language-html">{% raw %}{% for goal in goals %}
-    {% set progress = ((goal.current_amount or 0) / goal.target_amount * 100) if goal.target_amount and goal.target_amount > 0 else 0 %}
-    <div class="mb-3">
-        <h5>{{ goal.goal_type.title() }} Goal</h5>
-        <p>{{ goal.description or 'No description' }}</p>
-        <div class="progress mb-2">
-            <div class="progress-bar bg-info" role="progressbar" style="width: {{ progress }}%" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-        <p class="mb-0">${{ "%.2f"|format(goal.current_amount or 0) }} of ${{ "%.2f"|format(goal.target_amount) }} ({{ "%.1f"|format(progress) }}%)</p>
-        <p class="text-muted">Deadline: {{ goal.deadline.strftime('%Y-%m-%d') }}</p>
-    </div>
-{% endfor %}{% endraw %}</code></pre>
+                            {% set progress = ((goal.current_amount or 0) / goal.target_amount * 100) if goal.target_amount and goal.target_amount > 0 else 0 %}
+                            <div class="mb-3">
+                                <h5>{{ goal.goal_type.title() }} Goal</h5>
+                                <p>{{ goal.description or 'No description' }}</p>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ progress }}%" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <p class="mb-0">${{ "%.2f"|format(goal.current_amount or 0) }} of ${{ "%.2f"|format(goal.target_amount) }} ({{ "%.1f"|format(progress) }}%)</p>
+                                <p class="text-muted">Deadline: {{ goal.deadline.strftime('%Y-%m-%d') }}</p>
+                            </div>
+                        {% endfor %}{% endraw %}</code></pre>
 
                                     <h6>File: my_paldea/templates/home.html (Budget Alert Logic)</h6>
                                     <p>This template logic checks for budget overspending and displays alerts.</p>
                                     <pre><code class="language-html">{% raw %}{% if percentage > 100 %}
-    <div class="alert alert-danger mt-2">
-        <strong>Alert!</strong> You have exceeded your budget for {{ budget.category.name }}!
-    </div>
-{% endif %}{% endraw %}</code></pre>
+                                    <div class="alert alert-danger mt-2">
+                                        <strong>Alert!</strong> You have exceeded your budget for {{ budget.category.name }}!
+                                    </div>
+                                {% endif %}{% endraw %}</code></pre>
                                     {% elif member == 'Manish Shrivastav' %}
                                     <h6>File: my_paldea/templates/home.html (Chart.js Integration)</h6>
                                     <p>This template section integrates Chart.js for pie and bar chart visualizations.</p>

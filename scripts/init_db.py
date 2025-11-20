@@ -1,5 +1,5 @@
 from my_paldea import db, create_app
-from my_paldea.paldea_app.models import Category
+from my_paldea.paldea_app.models import Category, Currency
 
 app = create_app()
 
@@ -12,6 +12,20 @@ with app.app_context():
         if not Category.query.filter_by(name=cat_name).first():
             category = Category(name=cat_name)
             db.session.add(category)
+
+    # Add default currencies if they don't exist
+    default_currencies = [
+        ('USD', 'US Dollar', '$'),
+        ('EUR', 'Euro', '€'),
+        ('GBP', 'British Pound', '£'),
+        ('JPY', 'Japanese Yen', '¥'),
+        ('CAD', 'Canadian Dollar', 'C$')
+    ]
+    for code, name, symbol in default_currencies:
+        if not Currency.query.filter_by(code=code).first():
+            currency = Currency(code=code, name=name, symbol=symbol)
+            db.session.add(currency)
+
     db.session.commit()
 
-print("Database initialized with tables and default categories.")
+print("Database initialized with tables, default categories, and currencies.")

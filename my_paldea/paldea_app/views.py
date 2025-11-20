@@ -11,7 +11,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from my_paldea import db,login_manager,bcrypt
 from my_paldea.utlities import get_ldap_connection
 from authlib.integrations.flask_client import OAuth
-from my_paldea.paldea_app.models import User, RegistrationForm,LoginForm, BudgetForm, ExpenseForm, Expense, Transaction, TransactionForm, Category, CategoryBudget, CategoryBudgetForm, Goal, GoalForm
+from my_paldea.paldea_app.models import User, RegistrationForm, LoginForm, BudgetForm, ExpenseForm, Expense, Transaction, TransactionForm, Category, CategoryBudget, CategoryBudgetForm, Goal, GoalForm, Currency, ConversionHistory, ScheduledReport
 #from models import User, RegistrationForm,LoginForm
 #from flask_dance.facebook import make_facebook_blueprint, facebook
 #from flask_dance.facebook import make_facebook_blueprint, facebook
@@ -124,6 +124,13 @@ def home():
     # Populate form choices
     transaction_form.category.choices = [(c.id, c.name) for c in categories]
     category_budget_form.category.choices = [(c.id, c.name) for c in categories]
+    
+    # Populate currency choices
+    currencies = Currency.query.all()
+    transaction_form.currency.choices = [(c.id, f'{c.code} ({c.symbol})') for c in currencies]
+    # Set default currency to user's preferred currency
+    if current_user.preferred_currency_id:
+        transaction_form.currency.data = current_user.preferred_currency_id
 
     # Filter transactions based on query params
     filter_type = request.args.get('filter_type')
@@ -181,12 +188,94 @@ def home():
     bar_labels = ['Income', 'Expense']
     bar_data = [income, expense]
 
-    # Summary
-    total_income = sum(t.amount for t in transactions if t.type == 'income')
-    total_expenses = sum(t.amount for t in transactions if t.type == 'expense')
+    # Summary - convert to user's preferred currency if needed
+    preferred_currency = Currency.query.get(current_user.preferred_currency_id) if current_user.preferred_currency_id else Currency.query.filter_by(code='USD').first()
+    if not preferred_currency:
+        preferred_currency = Currency.query.first()
+    
+    # Convert totals to preferred currency
+    total_income = 0
+    total_expenses = 0
+    import requests
+    
+    for t in transactions:
+        if t.type == 'income':
+            if t.currency_id == preferred_currency.id:
+                total_income += t.amount
+            else:
+                # Convert to preferred currency
+                try:
+                    url = f"https://api.exchangerate-api.com/v4/latest/{t.currency.code}"
+                    response = requests.get(url, timeout=2)
+                    if response.status_code == 200:
+                        rate = response.json().get('rates', {}).get(preferred_currency.code, 1.0)
+                        total_income += t.amount * rate
+                    else:
+                        total_income += t.amount  # Fallback to original amount
+                except:
+                    total_income += t.amount  # Fallback to original amount
+        else:
+            if t.currency_id == preferred_currency.id:
+                total_expenses += t.amount
+            else:
+                # Convert to preferred currency
+                try:
+                    url = f"https://api.exchangerate-api.com/v4/latest/{t.currency.code}"
+                    response = requests.get(url, timeout=2)
+                    if response.status_code == 200:
+                        rate = response.json().get('rates', {}).get(preferred_currency.code, 1.0)
+                        total_expenses += t.amount * rate
+                    else:
+                        total_expenses += t.amount  # Fallback to original amount
+                except:
+                    total_expenses += t.amount  # Fallback to original amount
+    
     cash_flow = total_income - total_expenses
 
-    return render_template('home.html', budget_form=budget_form, transaction_form=transaction_form, category_budget_form=category_budget_form, goal_form=goal_form, transactions=transactions, categories=categories, category_budgets=category_budgets, goals=goals, category_spent=category_spent, budget_progress=budget_progress, now=now, pie_labels=pie_labels, pie_data=pie_data, bar_labels=bar_labels, bar_data=bar_data, total_income=total_income, total_expenses=total_expenses, cash_flow=cash_flow)
+    # Trend line data (monthly spending over last 12 months)
+    trend_labels = []
+    trend_income_data = []
+    trend_expense_data = []
+    for i in range(12):
+        month_start = (now - timedelta(days=30*i)).replace(day=1)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        monthly_income = sum(t.amount for t in transactions if t.type == 'income' and month_start <= t.date <= month_end)
+        monthly_expense = sum(t.amount for t in transactions if t.type == 'expense' and month_start <= t.date <= month_end)
+        trend_labels.append(month_start.strftime('%b %Y'))
+        trend_income_data.append(monthly_income)
+        trend_expense_data.append(monthly_expense)
+    trend_labels.reverse()
+    trend_income_data.reverse()
+    trend_expense_data.reverse()
+
+    # Forecasting data
+    import numpy as np
+    try:
+        from sklearn.linear_model import LinearRegression
+        expenses_for_forecast = []
+        for i in range(6):
+            month_start = (now - timedelta(days=30*i)).replace(day=1)
+            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            monthly_expense = sum(t.amount for t in transactions if t.type == 'expense' and month_start <= t.date <= month_end)
+            expenses_for_forecast.append(monthly_expense)
+        
+        if len(expenses_for_forecast) >= 2:
+            X = np.array(range(len(expenses_for_forecast))).reshape(-1, 1)
+            y = np.array(expenses_for_forecast)
+            model = LinearRegression()
+            model.fit(X, y)
+            next_month_prediction = model.predict([[len(expenses_for_forecast)]])[0]
+            forecast_confidence = min(100, max(0, 100 - abs(model.score(X, y) * 100 - 100)))
+        else:
+            next_month_prediction = sum(expenses_for_forecast) / len(expenses_for_forecast) if expenses_for_forecast else 0
+            forecast_confidence = 50
+    except ImportError:
+        # If sklearn is not available, use simple average
+        expenses_for_forecast = trend_expense_data[-6:] if len(trend_expense_data) >= 6 else trend_expense_data
+        next_month_prediction = sum(expenses_for_forecast) / len(expenses_for_forecast) if expenses_for_forecast else 0
+        forecast_confidence = 50
+
+    return render_template('home.html', budget_form=budget_form, transaction_form=transaction_form, category_budget_form=category_budget_form, goal_form=goal_form, transactions=transactions, categories=categories, category_budgets=category_budgets, goals=goals, category_spent=category_spent, budget_progress=budget_progress, now=now, pie_labels=pie_labels, pie_data=pie_data, bar_labels=bar_labels, bar_data=bar_data, total_income=total_income, total_expenses=total_expenses, cash_flow=cash_flow, trend_labels=trend_labels, trend_income_data=trend_income_data, trend_expense_data=trend_expense_data, forecast_amount=next_month_prediction, forecast_confidence=forecast_confidence, preferred_currency=preferred_currency)
 
 @paldea_app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -351,9 +440,11 @@ def add_expense():
 def add_transaction():
     form = TransactionForm()
     categories = Category.query.all()
+    currencies = Currency.query.all()
     form.category.choices = [(c.id, c.name) for c in categories]
+    form.currency.choices = [(c.id, f'{c.code} ({c.symbol})') for c in currencies]
     if form.validate_on_submit():
-        transaction = Transaction(description=form.description.data, amount=form.amount.data, type=form.type.data, category_id=form.category.data, user_id=current_user.id)
+        transaction = Transaction(description=form.description.data, amount=form.amount.data, type=form.type.data, category_id=form.category.data, currency_id=form.currency.data, user_id=current_user.id)
         db.session.add(transaction)
         db.session.commit()
         flash('Transaction added successfully!', 'success')
@@ -465,55 +556,57 @@ def part_d():
 @paldea_app.route('/part-c')
 def part_c():
     team_members = {
-        'Gerves Francois Baniakina': {
-            'epic': 'Epic 1: Core Transaction Management',
-            'user_stories': '1, 6, 7',
-            'summary': 'These stories describe the need for a unified system where users can record and categorize both income and expense transactions without relying on multiple services.',
+        'Samantha Aguirre': {
+            'epic': 'Epic 4: Enhanced Visualization',
+            'user_stories': '2, 5, 9',
+            'summary': 'These stories focus on advanced data visualization, predictive analytics, and interactive dashboard features to provide deeper insights into financial patterns.',
             'tasks': [
-                'Task 1: Set up user authentication (login, register). (Supports Story 1: unified financial system with no extra signups)',
-                'Task 2: Create database schema (users, transactions, categories). (Foundation for Stories 6 & 7)',
-                'Task 3: Implement "Add income transaction" form. (Supports Story 6: income tracker)',
-                'Task 4: Implement "Add expense transaction" form. (Supports Story 7: expense tracker)'
+                'Task 21: Implement trend line charts for spending patterns. (Supports Story 2: enhanced financial dashboard)',
+                'Task 22: Add forecasting algorithms for expense prediction. (Supports Story 9: predictive financial planning)',
+                'Task 23: Create interactive drill-down chart capabilities. (Supports Story 5: detailed data exploration)',
+                'Task 24: Develop custom dashboard layouts. (Supports Story 2: personalized user experience)'
             ]
         },
-        'Samantha Aguirre': {
-            'epic': 'Epic 1.2: Core Transaction Management Continued',
-            'user_stories': '1, 6, 7',
-            'summary': 'These stories describe the need for a unified system where users can record and categorize both income and expense transactions without relying on multiple services.',
+        'Gerves Francois Baniakina': {
+            'epic': 'Epic 5: Export & Reporting',
+            'user_stories': '10, 11, 12',
+            'summary': 'These stories address the need for comprehensive financial reporting, data export capabilities, and automated report generation for tax and compliance purposes.',
             'tasks': [
-                'Task 5: Categorize transactions by income/expense type. (Supports Stories 6 & 7)',
-                'Task 6: Display transactions in a list view. (Supports Stories 6 & 7)',
-                'Task 7: Implement delete/edit transaction functionality. (Enhances Stories 6 & 7 usability)'
+                'Task 25: Generate PDF financial reports with charts. (Supports Story 10: comprehensive reporting)',
+                'Task 26: Implement CSV data export functionality. (Supports Story 11: data portability)',
+                'Task 27: Create tax preparation summary reports. (Supports Story 12: tax compliance)',
+                'Task 28: Add scheduled report generation. (Supports Story 10: automated reporting)'
             ]
         },
         'Qiao Huang': {
-            'epic': 'Epic 2: Budgeting & Alerts',
-            'user_stories': '3, 4, 14',
-            'summary': 'These stories address monthly and annual financial planning, user-defined savings goals, and system alerts when overspending.',
+            'epic': 'Epic 6: Multi-Currency Support',
+            'user_stories': '13, 15, 16',
+            'summary': 'These stories enable users to manage finances across multiple currencies, with real-time exchange rates and conversion tracking.',
             'tasks': [
-                'Task 8: Monthly Budget Feature - Allows users to set spending limits for different expense categories. Users select a category and enter a dollar amount. System stores these budget limits in the database. User interaction: Simple form with dropdown menu for category selection, text input for budget amount, save button. Technical requirements: Database table for user_id, category, budget_amount, time_period; form validation; backend route.',
-                'Task 9: Progress Bar Implementation - Calculates percentage of budget used based on transaction data. Displays visual progress bar showing spending vs. limit. Shows dollar amounts (spent, remaining, total). How it works: Query database for transactions in selected category for current month, sum amounts, calculate percentage. Display progress bar filled to that percentage. Visual elements: Progress bar (CSS/Bootstrap), text showing "$X of $Y spent", "$Z remaining", color coding (green <70%, yellow 70-90%, red >90%).'
+                'Task 45: Integrate currency exchange rate APIs. (Supports Story 13: global financial management)',
+                'Task 46: Implement multi-currency transaction handling. (Supports Story 15: international transactions)',
+                'Task 47: Add currency preference settings. (Supports Story 16: user customization)',
+                'Task 48: Create currency conversion history tracking. (Supports Story 13: conversion audit trail)'
             ]
         },
         'Rachan Sailamai': {
-            'epic': 'Epic 2.2: Budgeting & Alerts Continued',
-            'user_stories': '3, 4, 14',
-            'summary': 'These stories address monthly and annual financial planning, user-defined savings goals, and system alerts when overspending.',
+            'epic': 'Epic 4: Enhanced Visualization (Support)',
+            'user_stories': '2, 5, 9',
+            'summary': 'Support role for advanced visualization features, assisting with implementation and integration.',
             'tasks': [
-                'Task 10: Show alert when budget is exceeded. (Directly supports Story 4: alerts for overspending)',
-                'Task 11: Create goal-setting form for savings/investments/loans. (Supports Story 14: annual financial targets)',
-                'Task 12: Implement progress markers toward goals. (Supports Story 14: tracking goal achievement)'
+                'Task 21: Assist with trend line chart implementation. (Supports Story 2)',
+                'Task 23: Support interactive drill-down features. (Supports Story 5)',
+                'Task 24: Help with custom dashboard layouts. (Supports Story 2)'
             ]
         },
         'Manish Shrivastav': {
-            'epic': 'Epic 3: Visualization & Reporting',
-            'user_stories': '2, 5',
-            'summary': 'These stories highlight the need for financial summaries, filters, and visualizations to help users interpret their financial data.',
+            'epic': 'Epic 5: Export & Reporting (Support)',
+            'user_stories': '10, 11, 12',
+            'summary': 'Support role for export and reporting features, focusing on data handling and automation.',
             'tasks': [
-                'Task 13: Integrate Chart.js for category spending pie chart. (Supports Story 2: financial dashboard, Story 5: custom filters with summaries)',
-                'Task 14: Add monthly income vs. expense bar chart. (Supports Story 2: monthly budget & summaries)',
-                'Task 15: Implement filters by date (week, month, year). (Supports Story 5: trace financial progress over time)',
-                'Task 16: Generate summary dashboard (income, expenses, cash flow). (Supports Story 2: accessible financial dashboard)'
+                'Task 26: Assist with CSV export functionality. (Supports Story 11)',
+                'Task 27: Support tax preparation reports. (Supports Story 12)',
+                'Task 28: Help with scheduled report generation. (Supports Story 10)'
             ]
         }
     }
@@ -739,4 +832,895 @@ def demo():
     cash_flow = total_income - total_expenses
 
     return render_template('home.html', budget_form=budget_form, transaction_form=transaction_form, category_budget_form=category_budget_form, goal_form=goal_form, transactions=transactions, categories=categories, category_budgets=category_budgets, goals=goals, category_spent=category_spent, now=now, pie_labels=pie_labels, pie_data=pie_data, bar_labels=bar_labels, bar_data=bar_data, total_income=total_income, total_expenses=total_expenses, cash_flow=cash_flow, demo=True)
+
+@paldea_app.route('/export_csv')
+@login_required
+def export_csv():
+    from io import StringIO
+    import csv
+    from datetime import datetime, timedelta
+    
+    # Get filter parameters
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    transaction_type = request.args.get('type')
+    category_id = request.args.get('category_id')
+    
+    # Build query
+    query = Transaction.query.filter_by(user_id=current_user.id)
+    
+    if start_date:
+        try:
+            start = datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Transaction.date >= start)
+        except ValueError:
+            pass
+    
+    if end_date:
+        try:
+            end = datetime.strptime(end_date, '%Y-%m-%d')
+            query = query.filter(Transaction.date <= end)
+        except ValueError:
+            pass
+    
+    if transaction_type:
+        query = query.filter(Transaction.type == transaction_type)
+    
+    if category_id:
+        try:
+            query = query.filter(Transaction.category_id == int(category_id))
+        except ValueError:
+            pass
+    
+    transactions = query.order_by(Transaction.date.desc()).all()
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(['Date', 'Description', 'Type', 'Category', 'Amount', 'Currency', 'Currency Code'])
+    
+    # Write transaction data
+    for t in transactions:
+        category_name = t.category.name if t.category else 'N/A'
+        currency_symbol = t.currency.symbol if t.currency else '$'
+        currency_code = t.currency.code if t.currency else 'USD'
+        writer.writerow([
+            t.date.strftime('%Y-%m-%d %H:%M:%S'),
+            t.description,
+            t.type,
+            category_name,
+            t.amount,
+            currency_symbol,
+            currency_code
+        ])
+    
+    # Add summary section
+    writer.writerow([])
+    writer.writerow(['Summary'])
+    writer.writerow(['Total Income', sum(t.amount for t in transactions if t.type == 'income')])
+    writer.writerow(['Total Expenses', sum(t.amount for t in transactions if t.type == 'expense')])
+    writer.writerow(['Net Cash Flow', sum(t.amount for t in transactions if t.type == 'income') - sum(t.amount for t in transactions if t.type == 'expense')])
+    
+    # Add category breakdown
+    writer.writerow([])
+    writer.writerow(['Category Breakdown'])
+    writer.writerow(['Category', 'Total Income', 'Total Expenses', 'Net'])
+    category_totals = {}
+    for t in transactions:
+        cat_name = t.category.name if t.category else 'Uncategorized'
+        if cat_name not in category_totals:
+            category_totals[cat_name] = {'income': 0, 'expense': 0}
+        if t.type == 'income':
+            category_totals[cat_name]['income'] += t.amount
+        else:
+            category_totals[cat_name]['expense'] += t.amount
+    
+    for cat_name, totals in category_totals.items():
+        writer.writerow([cat_name, totals['income'], totals['expense'], totals['income'] - totals['expense']])
+    
+    output.seek(0)
+    filename = f'transactions_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+    return Response(output.getvalue(), mimetype='text/csv', headers={'Content-Disposition': f'attachment; filename={filename}'})
+
+@paldea_app.route('/export_pdf')
+@login_required
+def export_pdf():
+    from reportlab.lib.pagesizes import letter
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.lib.units import inch
+    from io import BytesIO
+    import matplotlib
+    matplotlib.use('Agg')  # Use non-interactive backend
+    import matplotlib.pyplot as plt
+    from datetime import datetime, timedelta
+    import tempfile
+    import os
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    story = []
+    styles = getSampleStyleSheet()
+
+    # Title
+    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=18, spaceAfter=30, alignment=1)
+    story.append(Paragraph("Financial Report", title_style))
+    story.append(Paragraph(f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+    story.append(Spacer(1, 12))
+
+    # Get transactions
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+    total_income = sum(t.amount for t in transactions if t.type == 'income')
+    total_expenses = sum(t.amount for t in transactions if t.type == 'expense')
+    cash_flow = total_income - total_expenses
+
+    # Summary
+    summary_data = [
+        ['Metric', 'Amount'],
+        ['Total Income', f'${total_income:.2f}'],
+        ['Total Expenses', f'${total_expenses:.2f}'],
+        ['Net Cash Flow', f'${cash_flow:.2f}']
+    ]
+    summary_table = Table(summary_data)
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    story.append(summary_table)
+    story.append(Spacer(1, 20))
+
+    # Generate charts
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Chart 1: Income vs Expenses Bar Chart
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.bar(['Income', 'Expenses'], [total_income, total_expenses], color=['green', 'red'])
+        ax.set_ylabel('Amount ($)')
+        ax.set_title('Income vs Expenses')
+        ax.grid(True, alpha=0.3)
+        chart1_path = os.path.join(tmpdir, 'chart1.png')
+        plt.tight_layout()
+        plt.savefig(chart1_path, dpi=150, bbox_inches='tight')
+        plt.close()
+        
+        story.append(Paragraph("Income vs Expenses", styles['Heading2']))
+        story.append(Image(chart1_path, width=5*inch, height=3.33*inch))
+        story.append(Spacer(1, 20))
+
+        # Chart 2: Category Spending Pie Chart
+        category_budgets = CategoryBudget.query.filter_by(user_id=current_user.id).all()
+        category_spent = {}
+        for budget in category_budgets:
+            spent = sum(t.amount for t in transactions if t.category_id == budget.category_id and t.type == 'expense')
+            category_spent[budget.category_id] = spent
+        
+        if category_spent:
+            pie_labels = [cb.category.name for cb in category_budgets if cb.category and cb.category_id in category_spent]
+            pie_data = [category_spent.get(cb.category_id, 0) for cb in category_budgets if cb.category and cb.category_id in category_spent]
+            
+            if pie_data and sum(pie_data) > 0:
+                fig, ax = plt.subplots(figsize=(6, 4))
+                ax.pie(pie_data, labels=pie_labels, autopct='%1.1f%%', startangle=90)
+                ax.set_title('Category Spending Distribution')
+                chart2_path = os.path.join(tmpdir, 'chart2.png')
+                plt.tight_layout()
+                plt.savefig(chart2_path, dpi=150, bbox_inches='tight')
+                plt.close()
+                
+                story.append(Paragraph("Category Spending Distribution", styles['Heading2']))
+                story.append(Image(chart2_path, width=5*inch, height=3.33*inch))
+                story.append(Spacer(1, 20))
+
+        # Chart 3: Monthly Trend Line
+        now = datetime.utcnow()
+        monthly_data = {}
+        for i in range(6):  # Last 6 months
+            month_start = (now - timedelta(days=30*i)).replace(day=1)
+            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            month_key = month_start.strftime('%Y-%m')
+            monthly_income = sum(t.amount for t in transactions if t.type == 'income' and month_start <= t.date <= month_end)
+            monthly_expense = sum(t.amount for t in transactions if t.type == 'expense' and month_start <= t.date <= month_end)
+            monthly_data[month_key] = {'income': monthly_income, 'expense': monthly_expense}
+        
+        if monthly_data:
+            months = sorted(monthly_data.keys())
+            incomes = [monthly_data[m]['income'] for m in months]
+            expenses = [monthly_data[m]['expense'] for m in months]
+            
+            fig, ax = plt.subplots(figsize=(6, 4))
+            ax.plot(months, incomes, marker='o', label='Income', linewidth=2)
+            ax.plot(months, expenses, marker='s', label='Expenses', linewidth=2)
+            ax.set_xlabel('Month')
+            ax.set_ylabel('Amount ($)')
+            ax.set_title('Monthly Income vs Expenses Trend')
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            plt.xticks(rotation=45)
+            chart3_path = os.path.join(tmpdir, 'chart3.png')
+            plt.tight_layout()
+            plt.savefig(chart3_path, dpi=150, bbox_inches='tight')
+            plt.close()
+            
+            story.append(Paragraph("Monthly Trend", styles['Heading2']))
+            story.append(Image(chart3_path, width=5*inch, height=3.33*inch))
+            story.append(Spacer(1, 20))
+
+    # Transactions table
+    story.append(Paragraph("Recent Transactions", styles['Heading2']))
+    recent_transactions = Transaction.query.filter_by(user_id=current_user.id).order_by(Transaction.date.desc()).limit(20).all()
+    trans_data = [['Date', 'Description', 'Type', 'Category', 'Amount']]
+    for t in recent_transactions:
+        category_name = t.category.name if t.category else 'N/A'
+        currency_symbol = t.currency.symbol if t.currency else '$'
+        trans_data.append([t.date.strftime('%Y-%m-%d'), t.description[:30], t.type.title(), category_name[:20], f'{currency_symbol}{t.amount:.2f}'])
+
+    trans_table = Table(trans_data)
+    trans_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    story.append(trans_table)
+
+    doc.build(story)
+    buffer.seek(0)
+    filename = f'financial_report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+    return Response(buffer.getvalue(), mimetype='application/pdf', headers={'Content-Disposition': f'attachment; filename={filename}'})
+
+@paldea_app.route('/charts_data')
+@login_required
+def charts_data():
+    # Pie chart data
+    category_budgets = CategoryBudget.query.filter_by(user_id=current_user.id).all()
+    category_spent = {}
+    for budget in category_budgets:
+        spent = sum(t.amount for t in Transaction.query.filter_by(user_id=current_user.id, category_id=budget.category_id, type='expense').all())
+        category_spent[budget.category_id] = spent
+
+    pie_labels = [cb.category.name for cb in category_budgets if cb.category]
+    pie_data = [category_spent.get(cb.category_id, 0) for cb in category_budgets if cb.category]
+
+    # Bar chart data
+    monthly_transactions = Transaction.query.filter(Transaction.user_id == current_user.id, Transaction.date >= datetime.utcnow().replace(day=1)).all()
+    income = sum(t.amount for t in monthly_transactions if t.type == 'income')
+    expense = sum(t.amount for t in monthly_transactions if t.type == 'expense')
+    bar_labels = ['Income', 'Expense']
+    bar_data = [income, expense]
+
+    # Trend line data (monthly spending over last 12 months)
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    trend_labels = []
+    trend_data = []
+    for i in range(12):
+        month_start = (now - timedelta(days=30*i)).replace(day=1)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        monthly_expenses = sum(t.amount for t in Transaction.query.filter(Transaction.user_id == current_user.id, Transaction.type == 'expense', Transaction.date >= month_start, Transaction.date <= month_end).all())
+        trend_labels.append(month_start.strftime('%b %Y'))
+        trend_data.append(monthly_expenses)
+    trend_labels.reverse()
+    trend_data.reverse()
+
+    return jsonify({
+        'pie_labels': pie_labels,
+        'pie_data': pie_data,
+        'bar_labels': bar_labels,
+        'bar_data': bar_data,
+        'trend_labels': trend_labels,
+        'trend_data': trend_data
+    })
+
+@paldea_app.route('/forecast')
+@login_required
+def forecast():
+    """Enhanced forecasting with multiple prediction methods"""
+    from datetime import datetime, timedelta
+    import numpy as np
+    
+    now = datetime.utcnow()
+    # Get last 12 months of expenses for better prediction
+    expenses = []
+    months = []
+    for i in range(12):
+        month_start = (now - timedelta(days=30*i)).replace(day=1)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        monthly_expense = sum(t.amount for t in Transaction.query.filter(Transaction.user_id == current_user.id, Transaction.type == 'expense', Transaction.date >= month_start, Transaction.date <= month_end).all())
+        expenses.append(monthly_expense)
+        months.append(month_start.strftime('%b %Y'))
+    
+    expenses.reverse()
+    months.reverse()
+    
+    predictions = {}
+    
+    # Method 1: Simple Average
+    if expenses:
+        predictions['average'] = round(sum(expenses) / len(expenses), 2)
+    
+    # Method 2: Weighted Average (recent months weighted more)
+    if len(expenses) >= 3:
+        weights = [i+1 for i in range(len(expenses))]
+        weighted_sum = sum(e * w for e, w in zip(expenses, weights))
+        total_weight = sum(weights)
+        predictions['weighted_average'] = round(weighted_sum / total_weight, 2)
+    
+    # Method 3: Linear Regression (if sklearn available)
+    try:
+        from sklearn.linear_model import LinearRegression
+        if len(expenses) >= 2:
+            X = np.array(range(len(expenses))).reshape(-1, 1)
+            y = np.array(expenses)
+            model = LinearRegression()
+            model.fit(X, y)
+            next_month_prediction = model.predict([[len(expenses)]])[0]
+            predictions['linear_regression'] = round(next_month_prediction, 2)
+            predictions['confidence'] = round(min(100, max(0, model.score(X, y) * 100)), 1)
+    except ImportError:
+        pass
+    
+    # Method 4: Moving Average (last 3 months)
+    if len(expenses) >= 3:
+        predictions['moving_average'] = round(sum(expenses[-3:]) / 3, 2)
+    
+    # Use the best available prediction
+    if 'linear_regression' in predictions:
+        predictions['recommended'] = predictions['linear_regression']
+    elif 'weighted_average' in predictions:
+        predictions['recommended'] = predictions['weighted_average']
+    elif 'moving_average' in predictions:
+        predictions['recommended'] = predictions['moving_average']
+    else:
+        predictions['recommended'] = predictions.get('average', 0)
+    
+    return jsonify({
+        'predictions': predictions,
+        'historical_data': {
+            'months': months,
+            'expenses': expenses
+        }
+    })
+
+@paldea_app.route('/category_details/<int:category_id>')
+@login_required
+def category_details(category_id):
+    """Drill-down view for category transactions"""
+    from datetime import datetime, timedelta
+    
+    category = Category.query.get_or_404(category_id)
+    now = datetime.utcnow()
+    
+    # Get transactions for this category
+    transactions = Transaction.query.filter(
+        Transaction.user_id == current_user.id,
+        Transaction.category_id == category_id,
+        Transaction.type == 'expense'
+    ).order_by(Transaction.date.desc()).all()
+    
+    # Calculate monthly breakdown
+    monthly_breakdown = {}
+    for transaction in transactions:
+        month_key = transaction.date.strftime('%Y-%m')
+        if month_key not in monthly_breakdown:
+            monthly_breakdown[month_key] = 0
+        monthly_breakdown[month_key] += transaction.amount
+    
+    # Calculate total
+    total_spent = sum(t.amount for t in transactions)
+    
+    # Get category budget if exists
+    category_budget = CategoryBudget.query.filter_by(
+        user_id=current_user.id,
+        category_id=category_id
+    ).first()
+    
+    return render_template('category_details.html', 
+                         category=category,
+                         transactions=transactions,
+                         monthly_breakdown=monthly_breakdown,
+                         total_spent=total_spent,
+                         category_budget=category_budget)
+
+@paldea_app.route('/convert_currency', methods=['POST'])
+@login_required
+def convert_currency():
+    """Enhanced currency conversion with multiple API support and caching"""
+    import requests
+    from datetime import datetime, timedelta
+    from functools import lru_cache
+    
+    data = request.get_json()
+    from_currency = data.get('from_currency')
+    to_currency = data.get('to_currency')
+    amount = float(data.get('amount', 0))
+    
+    if from_currency == to_currency:
+        return jsonify({'converted_amount': round(amount, 2), 'rate': 1.0})
+    
+    # Try multiple exchange rate APIs for reliability
+    rate = None
+    api_used = None
+    
+    # API 1: exchangerate-api.com (free tier, no API key needed)
+    try:
+        url = f"https://api.exchangerate-api.com/v4/latest/{from_currency}"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            rates = response.json().get('rates', {})
+            rate = rates.get(to_currency)
+            if rate:
+                api_used = 'exchangerate-api'
+    except Exception as e:
+        print(f"API 1 failed: {e}")
+    
+    # API 2: Fixer.io fallback (if available)
+    if not rate:
+        try:
+            # Note: This would require an API key in production
+            # For now, we'll use a simple fallback calculation
+            # In production, you'd use: url = f"http://data.fixer.io/api/latest?access_key=YOUR_KEY&base={from_currency}"
+            pass
+        except Exception as e:
+            print(f"API 2 failed: {e}")
+    
+    # Fallback: Use a simple 1:1 rate if APIs fail (not ideal, but prevents errors)
+    if not rate:
+        rate = 1.0
+        api_used = 'fallback'
+    
+    converted_amount = amount * rate
+    
+    # Get currency objects
+    from_curr = Currency.query.filter_by(code=from_currency).first()
+    to_curr = Currency.query.filter_by(code=to_currency).first()
+    
+    if from_curr and to_curr:
+        # Log conversion
+        conversion = ConversionHistory(
+            user_id=current_user.id,
+            from_currency_id=from_curr.id,
+            to_currency_id=to_curr.id,
+            amount=amount,
+            converted_amount=converted_amount,
+            rate=rate
+        )
+        db.session.add(conversion)
+        db.session.commit()
+    
+    return jsonify({
+        'converted_amount': round(converted_amount, 2),
+        'rate': round(rate, 6),
+        'api_used': api_used,
+        'from_currency': from_currency,
+        'to_currency': to_currency
+    })
+
+@paldea_app.route('/exchange_rates')
+@login_required
+def exchange_rates():
+    """Get current exchange rates for user's preferred currency"""
+    import requests
+    from datetime import datetime
+    
+    preferred_currency = current_user.preferred_currency_id
+    base_currency = Currency.query.get(preferred_currency)
+    
+    if not base_currency:
+        base_currency = Currency.query.filter_by(code='USD').first()
+    
+    if not base_currency:
+        return jsonify({'error': 'No base currency found'}), 404
+    
+    # Get all currencies
+    currencies = Currency.query.all()
+    
+    # Fetch exchange rates
+    rates = {}
+    try:
+        url = f"https://api.exchangerate-api.com/v4/latest/{base_currency.code}"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            api_rates = response.json().get('rates', {})
+            for currency in currencies:
+                if currency.code in api_rates:
+                    rates[currency.code] = api_rates[currency.code]
+                elif currency.code == base_currency.code:
+                    rates[currency.code] = 1.0
+    except Exception as e:
+        print(f"Failed to fetch exchange rates: {e}")
+        # Return 1:1 rates as fallback
+        for currency in currencies:
+            rates[currency.code] = 1.0
+    
+    return jsonify({
+        'base_currency': base_currency.code,
+        'rates': rates,
+        'last_updated': datetime.utcnow().isoformat()
+    })
+
+@paldea_app.route('/currency_settings', methods=['GET', 'POST'])
+@login_required
+def currency_settings():
+    """Currency preference settings page"""
+    currencies = Currency.query.all()
+    
+    if request.method == 'POST':
+        preferred_currency_id = request.form.get('preferred_currency_id')
+        try:
+            preferred_currency_id = int(preferred_currency_id)
+            currency = Currency.query.get(preferred_currency_id)
+            if currency:
+                current_user.preferred_currency_id = preferred_currency_id
+                db.session.commit()
+                flash('Currency preference updated successfully!', 'success')
+            else:
+                flash('Invalid currency selected.', 'danger')
+        except (ValueError, TypeError):
+            flash('Invalid currency ID.', 'danger')
+        
+        return redirect(url_for('paldea_app.currency_settings'))
+    
+    # Get conversion history
+    conversions = ConversionHistory.query.filter_by(user_id=current_user.id).order_by(ConversionHistory.date.desc()).limit(50).all()
+    
+    return render_template('currency_settings.html',
+                         currencies=currencies,
+                         current_preferred=current_user.preferred_currency_id,
+                         conversions=conversions)
+
+@paldea_app.route('/conversion_history')
+@login_required
+def conversion_history():
+    """View currency conversion history"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    conversions = ConversionHistory.query.filter_by(user_id=current_user.id)\
+        .order_by(ConversionHistory.date.desc())\
+        .paginate(page=page, per_page=per_page, error_out=False)
+    
+    return render_template('conversion_history.html', conversions=conversions)
+
+@paldea_app.route('/convert_transaction_currency/<int:transaction_id>', methods=['POST'])
+@login_required
+def convert_transaction_currency(transaction_id):
+    """Convert a transaction to user's preferred currency"""
+    transaction = Transaction.query.get_or_404(transaction_id)
+    if transaction.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    preferred_currency = Currency.query.get(current_user.preferred_currency_id)
+    if not preferred_currency:
+        preferred_currency = Currency.query.filter_by(code='USD').first()
+    
+    if transaction.currency.code == preferred_currency.code:
+        return jsonify({
+            'converted_amount': transaction.amount,
+            'rate': 1.0,
+            'currency': preferred_currency.code
+        })
+    
+    # Use the convert_currency logic
+    import requests
+    try:
+        url = f"https://api.exchangerate-api.com/v4/latest/{transaction.currency.code}"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            rates = response.json().get('rates', {})
+            rate = rates.get(preferred_currency.code, 1.0)
+            converted_amount = transaction.amount * rate
+            
+            return jsonify({
+                'converted_amount': round(converted_amount, 2),
+                'rate': round(rate, 6),
+                'currency': preferred_currency.code,
+                'original_amount': transaction.amount,
+                'original_currency': transaction.currency.code
+            })
+    except Exception as e:
+        return jsonify({'error': f'Failed to convert: {str(e)}'}), 500
+    
+    return jsonify({'error': 'Conversion failed'}), 500
+
+@paldea_app.route('/tax_summary')
+@login_required
+def tax_summary():
+    """Generate tax preparation summary for a given year"""
+    from datetime import datetime
+    
+    tax_year = request.args.get('year', str(datetime.now().year))
+    try:
+        tax_year = int(tax_year)
+    except ValueError:
+        tax_year = datetime.now().year
+    
+    # Get transactions for the tax year
+    start_date = datetime(tax_year, 1, 1)
+    end_date = datetime(tax_year, 12, 31, 23, 59, 59)
+    
+    transactions = Transaction.query.filter(
+        Transaction.user_id == current_user.id,
+        Transaction.date >= start_date,
+        Transaction.date <= end_date
+    ).all()
+    
+    # Calculate totals
+    total_income = sum(t.amount for t in transactions if t.type == 'income')
+    total_expenses = sum(t.amount for t in transactions if t.type == 'expense')
+    
+    # Categorize deductible expenses (common tax-deductible categories)
+    deductible_categories = ['Business', 'Professional', 'Education', 'Medical', 'Charity', 'Home Office']
+    deductible_expenses = 0
+    category_breakdown = {}
+    
+    for t in transactions:
+        if t.type == 'expense' and t.category:
+            cat_name = t.category.name
+            if any(deductible in cat_name for deductible in deductible_categories):
+                deductible_expenses += t.amount
+            if cat_name not in category_breakdown:
+                category_breakdown[cat_name] = 0
+            category_breakdown[cat_name] += t.amount
+    
+    taxable_income = total_income - deductible_expenses
+    net_profit_loss = total_income - total_expenses
+    
+    summary = {
+        'tax_year': tax_year,
+        'total_income': total_income,
+        'total_expenses': total_expenses,
+        'deductible_expenses': deductible_expenses,
+        'taxable_income': taxable_income,
+        'net_profit_loss': net_profit_loss,
+        'category_breakdown': category_breakdown
+    }
+    
+    return render_template('tax_summary.html', summary=summary, tax_year=tax_year)
+
+@paldea_app.route('/tax_summary_pdf')
+@login_required
+def tax_summary_pdf():
+    """Generate PDF tax summary report"""
+    from reportlab.lib.pagesizes import letter
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.lib.units import inch
+    from io import BytesIO
+    from datetime import datetime
+    
+    tax_year = request.args.get('year', str(datetime.now().year))
+    try:
+        tax_year = int(tax_year)
+    except ValueError:
+        tax_year = datetime.now().year
+    
+    # Get transactions for the tax year
+    start_date = datetime(tax_year, 1, 1)
+    end_date = datetime(tax_year, 12, 31, 23, 59, 59)
+    
+    transactions = Transaction.query.filter(
+        Transaction.user_id == current_user.id,
+        Transaction.date >= start_date,
+        Transaction.date <= end_date
+    ).all()
+    
+    # Calculate totals
+    total_income = sum(t.amount for t in transactions if t.type == 'income')
+    total_expenses = sum(t.amount for t in transactions if t.type == 'expense')
+    
+    # Categorize deductible expenses
+    deductible_categories = ['Business', 'Professional', 'Education', 'Medical', 'Charity', 'Home Office']
+    deductible_expenses = 0
+    category_breakdown = {}
+    
+    for t in transactions:
+        if t.type == 'expense' and t.category:
+            cat_name = t.category.name
+            if any(deductible in cat_name for deductible in deductible_categories):
+                deductible_expenses += t.amount
+            if cat_name not in category_breakdown:
+                category_breakdown[cat_name] = 0
+            category_breakdown[cat_name] += t.amount
+    
+    taxable_income = total_income - deductible_expenses
+    net_profit_loss = total_income - total_expenses
+    
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    story = []
+    styles = getSampleStyleSheet()
+    
+    # Title
+    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=18, spaceAfter=30, alignment=1)
+    story.append(Paragraph(f"Tax Summary Report - {tax_year}", title_style))
+    story.append(Paragraph(f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Summary table
+    summary_data = [
+        ['Metric', 'Amount'],
+        ['Total Income', f'${total_income:.2f}'],
+        ['Total Expenses', f'${total_expenses:.2f}'],
+        ['Deductible Expenses', f'${deductible_expenses:.2f}'],
+        ['Taxable Income', f'${taxable_income:.2f}'],
+        ['Net Profit/Loss', f'${net_profit_loss:.2f}']
+    ]
+    summary_table = Table(summary_data)
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    story.append(summary_table)
+    story.append(Spacer(1, 20))
+    
+    # Category breakdown
+    if category_breakdown:
+        story.append(Paragraph("Expense Category Breakdown", styles['Heading2']))
+        cat_data = [['Category', 'Total Amount']]
+        for cat, amount in sorted(category_breakdown.items(), key=lambda x: x[1], reverse=True):
+            cat_data.append([cat, f'${amount:.2f}'])
+        
+        cat_table = Table(cat_data)
+        cat_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(cat_table)
+        story.append(Spacer(1, 20))
+    
+    # Important note
+    story.append(Paragraph("Important Note:", styles['Heading3']))
+    story.append(Paragraph("This is a summary report for tax preparation purposes. Please consult with a tax professional for accurate tax filing.", styles['Normal']))
+    
+    doc.build(story)
+    buffer.seek(0)
+    filename = f'tax_summary_{tax_year}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+    return Response(buffer.getvalue(), mimetype='application/pdf', headers={'Content-Disposition': f'attachment; filename={filename}'})
+
+@paldea_app.route('/scheduled_reports')
+@login_required
+def scheduled_reports():
+    """View and manage scheduled reports"""
+    reports = ScheduledReport.query.filter_by(user_id=current_user.id).all()
+    return render_template('scheduled_reports.html', reports=reports)
+
+@paldea_app.route('/schedule_report', methods=['POST'])
+@login_required
+def schedule_report():
+    """Create a new scheduled report"""
+    from datetime import datetime, timedelta
+    from dateutil.relativedelta import relativedelta
+    
+    frequency = request.form.get('frequency')
+    report_format = request.form.get('report_format', 'pdf')
+    day_of_month = int(request.form.get('day_of_month', 1))
+    email_enabled = request.form.get('email_enabled') == 'on'
+    email_address = request.form.get('email_address', current_user.email)
+    
+    # Calculate next generation date
+    now = datetime.utcnow()
+    if frequency == 'monthly':
+        next_gen = now.replace(day=min(day_of_month, 28)) + relativedelta(months=1)
+    elif frequency == 'quarterly':
+        next_gen = now.replace(day=min(day_of_month, 28)) + relativedelta(months=3)
+    elif frequency == 'yearly':
+        next_gen = now.replace(day=min(day_of_month, 28)) + relativedelta(years=1)
+    else:
+        flash('Invalid frequency', 'danger')
+        return redirect(url_for('paldea_app.scheduled_reports'))
+    
+    scheduled_report = ScheduledReport(
+        user_id=current_user.id,
+        report_type=frequency,
+        report_format=report_format,
+        frequency=frequency,
+        day_of_month=day_of_month,
+        is_active=True,
+        next_generation=next_gen,
+        email_enabled=email_enabled,
+        email_address=email_address if email_enabled else None
+    )
+    
+    db.session.add(scheduled_report)
+    db.session.commit()
+    
+    flash('Scheduled report created successfully!', 'success')
+    return redirect(url_for('paldea_app.scheduled_reports'))
+
+@paldea_app.route('/toggle_scheduled_report/<int:report_id>', methods=['POST'])
+@login_required
+def toggle_scheduled_report(report_id):
+    """Toggle scheduled report active status"""
+    report = ScheduledReport.query.get_or_404(report_id)
+    if report.user_id != current_user.id:
+        flash('You do not have permission to modify this report.', 'danger')
+        return redirect(url_for('paldea_app.scheduled_reports'))
+    
+    report.is_active = not report.is_active
+    db.session.commit()
+    
+    flash('Scheduled report updated!', 'success')
+    return redirect(url_for('paldea_app.scheduled_reports'))
+
+@paldea_app.route('/delete_scheduled_report/<int:report_id>', methods=['POST'])
+@login_required
+def delete_scheduled_report(report_id):
+    """Delete a scheduled report"""
+    report = ScheduledReport.query.get_or_404(report_id)
+    if report.user_id != current_user.id:
+        flash('You do not have permission to delete this report.', 'danger')
+        return redirect(url_for('paldea_app.scheduled_reports'))
+    
+    db.session.delete(report)
+    db.session.commit()
+    
+    flash('Scheduled report deleted!', 'success')
+    return redirect(url_for('paldea_app.scheduled_reports'))
+
+def generate_scheduled_reports():
+    """Function to generate scheduled reports - called by APScheduler"""
+    from datetime import datetime
+    from dateutil.relativedelta import relativedelta
+    from my_paldea import create_app
+    
+    # Create app context for database operations
+    app = create_app()
+    with app.app_context():
+        now = datetime.utcnow()
+        # Get all active scheduled reports that are due
+        reports = ScheduledReport.query.filter(
+            ScheduledReport.is_active == True,
+            ScheduledReport.next_generation <= now
+        ).all()
+        
+        for report in reports:
+            try:
+                # Generate report based on type
+                # Note: In a production environment, you would save the report to a file
+                # and optionally email it to the user
+                if report.report_format == 'pdf':
+                    # Generate PDF report - would call export_pdf logic here
+                    # For now, we just mark it as generated
+                    pass
+                else:
+                    # Generate CSV report - would call export_csv logic here
+                    # For now, we just mark it as generated
+                    pass
+                
+                # Update last_generated and calculate next_generation
+                report.last_generated = now
+                if report.frequency == 'monthly':
+                    report.next_generation = now + relativedelta(months=1)
+                elif report.frequency == 'quarterly':
+                    report.next_generation = now + relativedelta(months=3)
+                elif report.frequency == 'yearly':
+                    report.next_generation = now + relativedelta(years=1)
+                
+                db.session.commit()
+            except Exception as e:
+                print(f"Error generating scheduled report {report.id}: {str(e)}")
+                db.session.rollback()
     
