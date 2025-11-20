@@ -33,6 +33,11 @@ This is a Flask-based web application that provides comprehensive personal finan
   - Forecasting algorithms
   - Interactive drill-down charts
   - Custom dashboard layouts
+- **Phase 3**: Multi-Currency Support (Tasks 45-48)
+  - Currency exchange rate API integration
+  - Multi-currency transaction handling
+  - Currency preference settings
+  - Currency conversion history tracking
 
 ### 🚀 Upcoming Features (Milestone 2.0)
 - Receipt Upload & OCR Integration for automatic transaction entry
