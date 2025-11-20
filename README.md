@@ -39,22 +39,6 @@ This is a Flask-based web application that provides comprehensive personal finan
   - Currency preference settings
   - Currency conversion history tracking
 
-### 🚀 Upcoming Features (Milestone 2.0)
-- Receipt Upload & OCR Integration for automatic transaction entry
-- Subscription & Payment Reminders with automated notifications
-- Investment Portfolio Tracking with performance metrics
-- Loan Management System with payment countdown
-- Advanced Financial Goals with annual targets
-- Enhanced Data Visualization including trend charts and forecasting
-- Export & Reporting Features with PDF reports and CSV export
-- Mobile Responsiveness improvements and PWA capabilities
-- Multi-currency Support for international transactions
-- Advanced Filtering & Search with saved filters and bulk operations
-- API Development for REST endpoints and third-party integrations
-- Enhanced Security with 2FA and data encryption
-- Performance Optimization with caching and CDN integration
-- Automated Testing Suite expansion
-
 ---
 
 ## 🚀 Key Features
