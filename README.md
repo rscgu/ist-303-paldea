@@ -103,12 +103,14 @@ ist-303-paldea/
 │   └── static/                   # Static assets
 │       ├── css/main.css          # Custom styling
 │       ├── js/main.js            # JavaScript functionality
-│       └── burndown_chart.jpg    # Burndown chart image
+│       ├── burndown_chart.jpg    # Burndown chart image
+|       └── Burndown chart 11-20-15 # Burndown chart image final
 │
 ├── scripts/                      # Utility scripts
 │   └── init_db.py                # Database initialization
 ├── visuals/                      # Visual assets
-│   └── Burn Chart as on Oct 23 1.jpg # Burndown chart source
+│   ├── Burndown chart 11-20-15   # Burndown chart image source
+|   └── Burn Chart as on Oct 23   # Burndown chart source
 ├── my_paldea_part_d/             # Additional views for Part D
 │   └── secondary_views.py        # Secondary view functions
 ├── app.py                        # Main Flask application entry point
