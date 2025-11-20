@@ -28,6 +28,11 @@ This is a Flask-based web application that provides comprehensive personal finan
   - PDF financial reports with charts
   - Tax preparation summaries
   - Scheduled report generation
+- **Phase 2**: Enhanced Visualization (Tasks 21-24)
+  - Trend line charts for spending patterns
+  - Forecasting algorithms
+  - Interactive drill-down charts
+  - Custom dashboard layouts
 
 ### 🚀 Upcoming Features (Milestone 2.0)
 - Receipt Upload & OCR Integration for automatic transaction entry
