@@ -238,7 +238,7 @@ Team Paldea — IST 303, Fall 2025
 - Gerves Francois Baniakina — gerves.baniakina@cgu.edu
 - Qiao Huang — qiao.huang@cgu.edu
 - Rachan Sailamai — rachan.sailamai@cgu.edu
-- Manish Shrivastav — manish.shrivastav@cgu.edu
+- Manish Shrivastav — manish.ranjan.shrivastav@cgu.edu
 
 Please open issues in the repository for bugs or feature requests.
 
