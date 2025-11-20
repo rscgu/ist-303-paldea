@@ -22,6 +22,13 @@ This is a Flask-based web application that provides comprehensive personal finan
 - Responsive UI with Bootstrap 5
 - Testing framework with pytest
 
+### ✅ Completed Features (Milestone 2.0)
+- **Phase 1**: Data Export & Reporting (Tasks 25-28)
+  - CSV export functionality
+  - PDF financial reports with charts
+  - Tax preparation summaries
+  - Scheduled report generation
+
 ### 🚀 Upcoming Features (Milestone 2.0)
 - Receipt Upload & OCR Integration for automatic transaction entry
 - Subscription & Payment Reminders with automated notifications
