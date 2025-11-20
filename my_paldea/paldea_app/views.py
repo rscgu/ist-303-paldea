@@ -458,6 +458,10 @@ def ldap_login():
         flash(form.errors, 'danger')
     return render_template('login.html', form=form)
 
+@paldea_app.route('/part-d')
+def part_d():
+    return render_template('part_d.html')
+
 @paldea_app.route('/part-c')
 def part_c():
     team_members = {

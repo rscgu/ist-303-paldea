@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% block container %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="mb-4">Part D: Milestone 2.0 Presentation</h1>
+        <p class="lead">Team Paldea - IST 303 Fall 2025</p>
+        <p class="text-muted">Personal Finance Tracker Project</p>
+    </div>
+
+    <!-- Project Overview Section -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h3>Project Overview</h3>
+        </div>
+        <div class="card-body">
+            <h5>Milestone 1.0 Recap</h5>
+            <p>The Personal Finance Tracker is a Flask-based web application that provides comprehensive personal finance management with focus on budget tracking and expense visualization. The application fulfills Tasks 8 and 9 of the IST 303 course requirements.</p>
+
+            <h5>Milestone 2.0 Achievements</h5>
+            <ul>
+                <li><strong>Phase 1: Data Export & Reporting</strong>
+                    <ul>
+                        <li>CSV export functionality for financial data</li>
+                        <li>PDF financial reports with embedded charts</li>
+                        <li>Tax preparation summaries</li>
+                        <li>Scheduled report generation system</li>
+                    </ul>
+                </li>
+                <li><strong>Phase 2: Enhanced Visualization</strong>
+                    <ul>
+                        <li>Trend line charts for spending patterns over time</li>
+                        <li>Forecasting algorithms for expense prediction</li>
+                        <li>Interactive drill-down chart capabilities</li>
+                        <li>Custom dashboard layouts with user preferences</li>
+                    </ul>
+                </li>
+                <li><strong>Phase 3: Multi-Currency Support</strong>
+                    <ul>
+                        <li>Currency exchange rate API integration</li>
+                        <li>Multi-currency transaction handling</li>
+                        <li>Currency preference settings</li>
+                        <li>Currency conversion history tracking</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Working Code Demonstration Section -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h3>Working Code Demonstration</h3>
+        </div>
+        <div class="card-body">
+            <h5>Live Application Access</h5>
+            <p>The application is currently running and fully functional:</p>
+            <ul>
+                <li><strong>Main Application:</strong> <a href="http://127.0.0.1:5000" target="_blank">http://127.0.0.1:5000</a></li>
+                <li><strong>Part C Presentation:</strong> <a href="http://127.0.0.1:5000/part-c" target="_blank">http://127.0.0.1:5000/part-c</a></li>
+                <li><strong>Demo with Sample Data:</strong> <a href="http://127.0.0.1:5000/demo" target="_blank">http://127.0.0.1:5000/demo</a></li>
+            </ul>
+
+            <h5>Key Features Demonstrated</h5>
+            <ul>
+                <li>✅ User authentication and registration</li>
+                <li>✅ Transaction management (income/expense tracking)</li>
+                <li>✅ Category-based budgeting with progress bars</li>
+                <li>✅ Financial goal setting and monitoring</li>
+                <li>✅ Interactive charts and data visualization</li>
+                <li>✅ Data export and reporting capabilities</li>
+                <li>✅ Multi-currency transaction support</li>
+            </ul>
+
+            <p><strong>To run locally:</strong> Execute <code>python run.py</code> in the project directory.</p>
+        </div>
+    </div>
+
+    <!-- Agile Methods Documentation Section -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h3>Agile Methods Documentation</h3>
+        </div>
+        <div class="card-body">
+            <h5>Project Structure and Epics</h5>
+            <p>Milestone 2.0 was developed using agile methodologies with three main epics:</p>
+
+            <ul>
+                <li><strong>Epic 4: Enhanced Visualization</strong> - Advanced charting and forecasting</li>
+                <li><strong>Epic 5: Export & Reporting</strong> - Data export and automated reporting</li>
+                <li><strong>Epic 6: Multi-Currency Support</strong> - International transaction handling</li>
+            </ul>
+
+            <h5>Burndown Chart</h5>
+            <p>The following burndown chart shows the progress of tasks completed over time for Milestone 2.0:</p>
+            <div class="text-center mb-4">
+                <img src="{{ url_for('static', filename='burndown_chart.jpg') }}" alt="Burndown Chart" class="img-fluid" style="max-width: 100%; height: auto;">
+            </div>
+
+            <h5>Team Member Assignments</h5>
+            <ul>
+                <li><strong>Samantha Aguirre - Epic 4: Enhanced Visualization</strong></li>
+                <li><strong>Gerves Francois Baniakina - Epic 5: Export & Reporting</strong></li>
+                <li><strong>Qiao Huang - Epic 6: Multi-Currency Support</strong></li>
+                <li><strong>Rachan Sailamai - Epic 4: Enhanced Visualization (Support)</strong></li>
+                <li><strong>Manish Shrivastav - Epic 5: Export & Reporting (Support)</strong></li>
+            </ul>
+
+            <h5>Agile Development Practices</h5>
+            <ul>
+                <li>Weekly team meetings for progress review and planning</li>
+                <li>User story refinement with detailed acceptance criteria</li>
+                <li>Continuous integration and automated testing</li>
+                <li>Code reviews and quality assurance</li>
+                <li>Iterative development with working software delivery</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Code Testing Section -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h3>Code Testing and Quality Assurance</h3>
+        </div>
+        <div class="card-body">
+            <h5>Testing Approach</h5>
+            <p>Comprehensive testing was performed including:</p>
+
+            <h6>Unit Testing</h6>
+            <ul>
+                <li>Individual component testing for forms and models</li>
+                <li>Database operations and data validation</li>
+                <li>API endpoint functionality</li>
+                <li>Chart generation and data processing</li>
+            </ul>
+
+            <h6>Integration Testing</h6>
+            <ul>
+                <li>End-to-end user workflows</li>
+                <li>Authentication and authorization flows</li>
+                <li>Data export and import processes</li>
+                <li>Multi-currency conversion accuracy</li>
+            </ul>
+
+            <h6>User Interface Testing</h6>
+            <ul>
+                <li>Responsive design across devices</li>
+                <li>Interactive chart functionality</li>
+                <li>Form validation and error handling</li>
+                <li>Navigation and user experience</li>
+            </ul>
+
+            <h5>Test Coverage</h5>
+            <p>Achieved 87%+ automated test coverage with pytest framework.</p>
+        </div>
+    </div>
+
+    <!-- Successes and Lessons Learned Section -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h3>Successes and Lessons Learned</h3>
+        </div>
+        <div class="card-body">
+            <h5>Key Successes</h5>
+            <ul>
+                <li>Successful implementation of all planned features</li>
+                <li>Effective team collaboration and agile practices</li>
+                <li>High-quality code with comprehensive testing</li>
+                <li>User-friendly interface with responsive design</li>
+                <li>Scalable architecture supporting future enhancements</li>
+            </ul>
+
+            <h5>Lessons Learned</h5>
+            <ul>
+                <li>Importance of early planning and requirement gathering</li>
+                <li>Value of iterative development and regular feedback</li>
+                <li>Benefits of automated testing for code quality</li>
+                <li>Significance of user experience in application design</li>
+                <li>Advantages of version control and collaborative development</li>
+            </ul>
+
+            <h5>Three Most Important Software Development Lessons</h5>
+            <ol>
+                <li><strong>Agile Methodology:</strong> Iterative development with regular feedback leads to better software quality and user satisfaction.</li>
+                <li><strong>Test-Driven Development:</strong> Writing tests first ensures robust, maintainable code and reduces bugs in production.</li>
+                <li><strong>User-Centered Design:</strong> Understanding user needs and focusing on usability creates more valuable and adoptable software.</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Repository and Submission Section -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h3>Repository and Submission Details</h3>
+        </div>
+        <div class="card-body">
+            <h5>Repository Information</h5>
+            <ul>
+                <li><strong>GitHub Repository:</strong> <a href="https://github.com/rscgu/ist-303-paldea" target="_blank">https://github.com/rscgu/ist-303-paldea</a></li>
+                <li><strong>Final Commit:</strong> Prior to assignment due date</li>
+                <li><strong>Branch:</strong> main (production-ready code)</li>
+            </ul>
+
+            <h5>README Documentation</h5>
+            <p>The README.md file contains complete information for:</p>
+            <ul>
+                <li>How to run the program locally</li>
+                <li>How to test the application</li>
+                <li>How to generate test coverage reports</li>
+                <li>Three most important software development lessons learned</li>
+                <li>Installation and setup instructions</li>
+            </ul>
+
+            <h5>Presentation Materials</h5>
+            <p>All presentation materials have been uploaded to the "Part D" folder in the repository.</p>
+        </div>
+    </div>
+
+    <!-- Team Information Section -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h3>Team Information</h3>
+        </div>
+        <div class="card-body">
+            <h5>Team Paldea Members</h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Samantha Aguirre</strong> - samantha.aguirre@cgu.edu</li>
+                <li class="list-group-item"><strong>Gerves Francois Baniakina</strong> - gerves.baniakina@cgu.edu</li>
+                <li class="list-group-item"><strong>Qiao Huang</strong> - qiao.huang@cgu.edu</li>
+                <li class="list-group-item"><strong>Rachan Sailamai</strong> - rachan.sailamai@cgu.edu</li>
+                <li class="list-group-item"><strong>Manish Shrivastav</strong> - manish.ranjan.shrivastav@cgu.edu</li>
+            </ul>
+
+            <h5>Course Information</h5>
+            <p><strong>Course:</strong> IST 303 - Fall 2025</p>
+            <p><strong>Instructor:</strong> Professor David Kallemeyn</p>
+            <p><strong>Project:</strong> Personal Finance Tracker Application</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
