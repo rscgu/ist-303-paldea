@@ -831,7 +831,12 @@ def demo():
     total_expenses = sum(t.amount for t in transactions if t.type == 'expense')
     cash_flow = total_income - total_expenses
 
-    return render_template('home.html', budget_form=budget_form, transaction_form=transaction_form, category_budget_form=category_budget_form, goal_form=goal_form, transactions=transactions, categories=categories, category_budgets=category_budgets, goals=goals, category_spent=category_spent, now=now, pie_labels=pie_labels, pie_data=pie_data, bar_labels=bar_labels, bar_data=bar_data, total_income=total_income, total_expenses=total_expenses, cash_flow=cash_flow, demo=True)
+    # Default preferred currency for demo
+    preferred_currency = Currency.query.filter_by(code='USD').first()
+    if not preferred_currency:
+        preferred_currency = Currency(code='USD', symbol='$', name='US Dollar')
+
+    return render_template('home.html', budget_form=budget_form, transaction_form=transaction_form, category_budget_form=category_budget_form, goal_form=goal_form, transactions=transactions, categories=categories, category_budgets=category_budgets, goals=goals, category_spent=category_spent, now=now, pie_labels=pie_labels, pie_data=pie_data, bar_labels=bar_labels, bar_data=bar_data, total_income=total_income, total_expenses=total_expenses, cash_flow=cash_flow, preferred_currency=preferred_currency, demo=True)
 
 @paldea_app.route('/export_csv')
 @login_required
