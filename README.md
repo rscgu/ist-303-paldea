@@ -217,8 +217,8 @@ Current Test Coverage (Milestone 2.0)
 | App Initialization (`__init__.py`) | 83%      |
 | Utility Functions                  | 70%      |
 | Application Views (`views.py`)     | 48%      |
-| Financial Logic (`finSystem.py`)   | 0%       |
-| **Overall Coverage**               | **53%**  |
+| Financial Logic (`finSystem.py`)   | 9%       |
+| **Overall Coverage**               | **55%**  |
 
 Test Summary
 
