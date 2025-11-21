@@ -242,7 +242,8 @@ Budget creation
 
 CSV & PDF export
 
-PDF export may return 200 or 500 depending on local browser support
+During testing, we discovered that the original PDF export route depended on an external headless browser (Chrome/Edge). As a result, the route behaved inconsistently across machines — returning 200 OK only when a headless browser was available, and 500 Server Error when it was not. This affected our automated tests, which initially needed to accept either status code.
+
 ---
 
 ## 📦 Project structure (summary)
@@ -263,6 +264,14 @@ README.md          # this file
 ```
 
 ---
+## Key Learnings from This Project
+
+1. Agile/Scrum improves teamwork and delivery consistency — Working in structured sprints, maintaining a burndown chart, and tracking velocity taught us how to plan realistically, adapt quickly, and stay aligned as a team.
+
+2. Automated testing is essential for stable software — Building pytest tests and tracking coverage helped us catch issues early, verify behavior after changes, and gain confidence that core features (login, budgets, transactions, exports) were working correctly.
+
+3. Clean architecture makes collaboration easier — Separating logic into models, routes, templates, and utilities made the code more maintainable, reduced merge conflicts, and allowed team members to develop features in parallel without blocking each other.
+
 
 ## 🤝 Contributing
 
@@ -296,4 +305,4 @@ Please open issues in the repository for bugs or feature requests.
 
 ---
 
-_Last updated: October 24, 2024_
+_Last updated: November 20, 2025_
