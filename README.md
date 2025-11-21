@@ -113,6 +113,13 @@ ist-303-paldea/
 |   └── Burn Chart as on Oct 23   # Burndown chart source
 ├── my_paldea_part_d/             # Additional views for Part D
 │   └── secondary_views.py        # Secondary view functions
+├── tests/
+│   ├── conftest.py               #Provides client and logged_in_client fixtures
+│   ├── test_auth.py              #Login success, login failure, and access protection for /home
+│   ├── test_home.py              #That the /home dashboard loads correctly for a logged-in user
+│   ├── test_transactions.py      #Adding a new transaction via the /add_transaction route
+│   ├── test_budgets.py           #Submitting a category budget through /set_category_budget
+│   └── test_exports.py           #CSV export (/financial_report_csv) and PDF export (/financial_report_pdf
 ├── app.py                        # Main Flask application entry point
 ├── run.py                        # Development server runner
 ├── requirements.txt              # Python dependencies
