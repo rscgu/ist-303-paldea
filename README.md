@@ -188,23 +188,59 @@ Usage notes:
 
 ---
 
-## � Testing
+##  Testing
 
-Run the project's tests with pytest. From the project root (venv activated):
+Testing
 
-```bash
-# Run all tests
+This project includes an automated test suite built using pytest and pytest-cov.
+To run the tests, first activate your virtual environment and navigate to the project root directory.
+Run all tests
 pytest
 
-# Run with coverage
-pytest --cov=my_paldea
+Run tests with coverage reporting
+pytest --cov=my_paldea --cov-report=term-missing
 
-# Generate HTML coverage report
+Generate an HTML coverage report
 pytest --cov=my_paldea --cov-report=html
-```
 
-Known test coverage: ~87% (project-reported). Add or update tests in `tests/` if present.
 
+An htmlcov/ folder will be created. Open the report in a browser:
+
+htmlcov/index.html
+
+Current Test Coverage (Milestone 2.0)
+
+| Module / Component                 | Coverage |
+| ---------------------------------- | -------- |
+| Configuration (`config.py`)        | 100%     |
+| Database Models (`models.py`)      | 92%      |
+| App Initialization (`__init__.py`) | 83%      |
+| Utility Functions                  | 70%      |
+| Application Views (`views.py`)     | 48%      |
+| Financial Logic (`finSystem.py`)   | 0%       |
+| **Overall Coverage**               | **53%**  |
+
+Test Summary
+
+Total tests: 8
+
+All tests passed successfully
+
+Covers:
+
+Authentication
+
+Access control
+
+Dashboard rendering
+
+Transaction creation
+
+Budget creation
+
+CSV & PDF export
+
+PDF export may return 200 or 500 depending on local browser support
 ---
 
 ## 📦 Project structure (summary)
@@ -216,6 +252,11 @@ my_paldea/        # application package (models, views, templates, static)
 scripts/          # utility scripts (init_db.py)
 app.py, run.py    # app entry points
 requirements.txt  # Python deps
+tests/test_auth.py
+tests/test_home.py
+tests/test_transactions.py
+tests/test_budgets.py
+tests/test_exports.py
 README.md          # this file
 ```
 
